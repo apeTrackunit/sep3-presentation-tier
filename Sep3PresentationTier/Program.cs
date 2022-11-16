@@ -12,4 +12,5 @@ builder.Services.AddScoped(sp => new HttpClient {BaseAddress = new Uri(builder.H
 
 builder.Services.AddScoped<IReportService, ReportService>();
 
+
 await builder.Build().RunAsync();

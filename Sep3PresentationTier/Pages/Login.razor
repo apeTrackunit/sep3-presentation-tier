@@ -1,0 +1,62 @@
+@page "/Login"
+@using Services.Interfaces
+@using Model
+@inject IAuthService authService;
+@inject NavigationManager navMgr;
+
+<h3>Login</h3>
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="card">
+            <h3>Please login</h3>
+            <div class="field">
+                <label>Email:</label>
+                <input type="text" @bind="email"/>
+            </div>
+            <div class="field">
+                <label style="text-align: center">Password:</label>
+                <input type="password" @bind="password"/>
+            </div>
+            @if (!string.IsNullOrEmpty(resultMsg))
+            {
+                <div class="field">
+                    <label style="color: red">
+                        @resultMsg
+                    </label>
+                </div>
+            }
+            <div class="field">
+                <button class="loginbtn" @onclick="LoginAsync">Log in</button>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private string email = "";
+    private string password = "";
+    private string resultMsg = "";
+
+    private async Task LoginAsync()
+    {
+        resultMsg = "";
+
+        try
+        {
+            await authService.LoginAsync(new UserLoginDto(email, password));
+            email = "";
+            password = "";
+            resultMsg = "Logged in";
+            navMgr.NavigateTo("/");
+            Console.WriteLine(resultMsg + ": " + email);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            resultMsg = e.Message;
+        }
+    }
+
+}
+
