@@ -1,35 +1,134 @@
 ﻿@page "/Register"
 @using Services.Interfaces
 @using Model.DTOs
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@using System.Text.RegularExpressions
 @inject IAuthService authService;
 @inject NavigationManager navMgr;
-<h3>Register</h3>
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
+                              Validation="@(new EmailAddressAttribute() { ErrorMessage = "The email address is invalid" })" @bind-Value="email"/>
+                <MudTextField T="string" Label="Username" Required="true" RequiredError="User name is required!" @bind-Value="name"/>
+                <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
+                              InputType="@PasswordInput"
+                              Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                              RequiredError="Password is required!" @bind-Value="password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password"/>
+                <MudTextField T="string"
+                              Label="Password" HelperText="Repeat the password" InputType="@PasswordInput"
+                              Validation="@(new Func<string, string>(PasswordMatch))" />
+                @*How do we register admin/user? Is it the same.
+                <div class="d-flex"> 
+                    <MudRadioGroup T="string" Required="true" RequiredError="Account type is required!">
+                        <MudRadio Option="@("User")">User</MudRadio> 
+                        <MudRadio Option="@("Administrator")">Administrator</MudRadio> 
+                    </MudRadioGroup> 
+                 </div> *@
+                <div class="d-flex align-center justify-space-between">
+                    @*Possibly later for ToS verification, if we want to be fancy? :D 
+                    <MudCheckBox T="bool" Required="true" RequiredError="You must agree" Label="I agree!"  /> *@
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="CreateAsync">Register</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(() => form.Reset())" Class="mx-2">Reset</MudButton>
+                </div>
+            </MudForm>
+            @if (!string.IsNullOrWhiteSpace(msg))
+            {
+                <MudPaper>
+                    <MudTextField T="string" @bind-Value="msg" ReadOnly="true" Variant="Variant.Outlined"></MudTextField>
+                </MudPaper>
+            }
+        </MudPaper>
+    </MudItem>
+    @* If you want additional error messages on the side.
+    @if (errors.Length > 0) *@
+    @* { *@
+    @*     <MudItem xs="12" sm="5"> *@
+    @*         <MudPaper Class="pa-4 mud-height-full"> *@
+    @* *@
+    @*             <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText> *@
+    @*             @foreach (var error in errors) *@
+    @*             { *@
+    @*                 <MudText Color="@Color.Error">@error</MudText> *@
+    @*             } *@
+    @* *@
+    @*         </MudPaper> *@
+    @*     </MudItem> *@
+    @* } *@
+</MudGrid>
 
 @code {
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField1;
+    MudForm form;
+    
     private string email = "";
     private string password = "";
     private string name = "";
-    private string resultMsg = "";
-    private string color = "";
+    private string msg = "";
+    
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ButtonTestclick()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Password must be at least of length 8";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (pwField1.Value != arg)
+            return "Passwords don't match";
+        return null;
+    }
 
     private async Task CreateAsync()
     {
-        resultMsg = "";
-
+        msg = "";
         try
         {
             await authService.RegisterAsync(new RegisterUserDto(email, password, name));
             email = "";
             password = "";
-            resultMsg = "User successfully created";
-            color = "green";
+            msg = "Account created successfully";
             navMgr.NavigateTo("/login");
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            resultMsg = e.Message;
-            color = "red";
+            msg = e.Message;
         }
     }
+
 }
