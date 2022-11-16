@@ -3,41 +3,70 @@
 @using Model
 @inject IAuthService authService;
 @inject NavigationManager navMgr;
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@using System.Security.AccessControl
+@using Microsoft.AspNetCore.Components
 
-<h3>Login</h3>
-<AuthorizeView>
-    <NotAuthorized>
-        <div class="card">
-            <h3>Please login</h3>
-            <div class="field">
-                <label>Email:</label>
-                <input type="text" @bind="email"/>
-            </div>
-            <div class="field">
-                <label style="text-align: center">Password:</label>
-                <input type="password" @bind="password"/>
-            </div>
-            @if (!string.IsNullOrEmpty(resultMsg))
-            {
-                <div class="field">
-                    <label style="color: red">
-                        @resultMsg
-                    </label>
-                </div>
-            }
-            <div class="field">
-                <button class="loginbtn" @onclick="LoginAsync">Log in</button>
-            </div>
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm @ref="form" @bind-isValid="success" @bind-Errors="errors">
+                <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
+                                              Validation="@(new EmailAddressAttribute() { ErrorMessage = "The email address is invalid" })" @bind-Value="email"/>
+                <MudTextField T="string" Label="Password" HelperText="Enter your password" @ref="pwField"
+                              InputType="@PasswordInput"
+                              RequiredError="Password is required!" @bind-Value="password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" 
+                              OnAdornmentClick="ButtonTestClick" AdornmentAriaLabel="Show Password"/>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoginOnClick">@ButtonText</MudButton>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
 
 
 @code {
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField;
+    MudForm form;
+    public string ButtonText { get; set; } = "Login";
+
     private string email = "";
     private string password = "";
     private string resultMsg = "";
 
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ButtonTestClick()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    void LoginOnClick()
+    {
+        Console.WriteLine("Logged IN:" + email + " " + password);
+        LoginAsync();
+        
+        
+    }
+    
     private async Task LoginAsync()
     {
         resultMsg = "";
