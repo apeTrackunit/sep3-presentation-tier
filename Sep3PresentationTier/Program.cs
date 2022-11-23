@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 using Sep3PresentationTier;
 using Services.Implementations;
 using Services.Interfaces;
@@ -13,6 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient
     BaseAddress = new Uri("http://localhost:8910")
 });
 
+builder.Services.AddMudServices();
 builder.Services.AddScoped<IReportService, ReportService>();
 
 await builder.Build().RunAsync();

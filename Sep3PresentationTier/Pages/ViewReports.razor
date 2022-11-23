@@ -4,45 +4,35 @@
 @using Model
 @inject IReportService ReportService
 
-
 <h3 style="text-align: center">Overview of all reports</h3>
 
-<div class="report-container">
+<MudGrid>
+    
     @foreach (var report in reports)
     {
-        <div>
-            @report.Description, @report.Status
-        </div>
+        <MudItem xs="6">
+            <MudCardMedia Image="css/imgs/killme.jpg" ></MudCardMedia>
+            <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
+                <MudCardContent>
+                    <MudText Typo="Typo.body1"> Latitude: @report.Location.Latitude</MudText>
+                    <MudText Typo="Typo.body1">Longtitude: @report.Location.Longitude</MudText>
+                    <MudText Typo="Typo.body1">Size: @report.Location.Size </MudText>
+                    <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
+                    <br>
+                    <MudText Typo="Typo.body2"> Date: @report.Date[1]/@report.Date[2]/@report.Date[0]</MudText>
+                    <MudText Typo="Typo.body2"> Time: @report.Time[0]:@report.Time[1]</MudText>
+                    <MudText Typo="Typo.body2"> Status @report.Status</MudText>
+                    <br>
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success"> Create Event</MudButton>
+
+                </MudCardContent>
+                </MudCard>
+        </MudItem>
     }
-    
+
     <div>@msg</div>
-    
-    <div class="report-card">
-        <a target="_blank" href="imagesForTesting/location1.jpg">
-            <img src="imagesForTesting/location1.jpg" alt="location1" class="locationImage"/>
-        </a>
-        <div class="location-info">
-            <label> Location 1</label>
-            <label> Extent of cleaning </label>
-            <label> Date </label>
-        </div>
 
-    </div>
-
-    <div class="report-card">
-        <a target="_blank" href="imagesForTesting/location2.jpg">
-            <img src="imagesForTesting/location2.jpg" alt="location2" class="locationImage"/>
-        </a>
-        <div class="location-info">
-            <label> Location 2</label>
-            <label> Extent of cleaning </label>
-            <label> Date </label>
-        </div>
-    </div>
-</div>
-    
-
-
+</MudGrid>
 
 
 @code {
@@ -50,6 +40,8 @@
     private string msg = "";
     private ICollection<Report> reports = new List<Report>();
 
+  
+    
     protected override async Task OnInitializedAsync()
     {
         await loadData();
