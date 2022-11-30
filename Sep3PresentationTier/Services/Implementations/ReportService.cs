@@ -15,7 +15,7 @@ public class ReportService : IReportService
 
     public async Task<ICollection<Report>> GetAsync()
     {
-        HttpResponseMessage response = await client.GetAsync("http://localhost:8910/reports");
+        HttpResponseMessage response = await client.GetAsync("/reports");
         string result = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             throw new Exception(result);

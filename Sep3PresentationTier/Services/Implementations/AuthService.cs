@@ -1,5 +1,5 @@
-﻿using System.Security.Claims;
 using System.Text;
+using System.Security.Claims;
 using System.Text.Json;
 using Model;
 using Model.DTOs;
@@ -10,29 +10,27 @@ namespace Services.Implementations;
 public class AuthService : IAuthService
 {
     private readonly HttpClient client;
-
-    public static string? Jwt { get; set; } = "";
+    public Action<ClaimsPrincipal> OnAuthStateChange { get; set; } = null;
 
     public AuthService(HttpClient client)
     {
         this.client = client;
     }
-
-    public Action<ClaimsPrincipal> OnAuthStateChange { get; set; } = null;
-
-
-    public async Task RegisterAsync(RegisterUserDto user)
+    
+    public async Task<string> RegisterAsync(RegisterUserDto user)
     {
         string userAsJson = JsonSerializer.Serialize(user);
         StringContent content = new(userAsJson, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/auth/register", content);
+        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/register", content);
 
         string responseContent = await response.Content.ReadAsStringAsync();
-
+        
         if (!response.IsSuccessStatusCode)
             throw new Exception(responseContent);
-    }
 
+        return responseContent;
+    }
+    
     public async Task LoginAsync(UserLoginDto user)
     {
         string userAsJson = JsonSerializer.Serialize(user);
@@ -53,7 +51,6 @@ public class AuthService : IAuthService
         OnAuthStateChange.Invoke(principal);
 
     }
-    
     
     //JWT interaction
     // Below methods taken from https://github.com/SteveSandersonMS/presentation-2019-06-NDCOslo/blob/master/demos/MissionControl/MissionControl.Client/Util/ServiceExtensions.cs
@@ -80,7 +77,6 @@ public class AuthService : IAuthService
         return Convert.FromBase64String(base64);
     }
     
-    //Converting to 
     private static ClaimsPrincipal CreateClaimsPrincipal()
     {
         if (string.IsNullOrEmpty(Jwt))
@@ -95,7 +91,4 @@ public class AuthService : IAuthService
         ClaimsPrincipal principal = new(identity);
         return principal;
     }
-    
-    
-    
 }

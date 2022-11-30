@@ -1,9 +1,30 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 
-<h1>Hello, world!</h1>
+@if (@hasToken)
+{
+    <div>Logged in!</div>
+} else
+{
+    <Register />
+}
+    
 
-Welcome to your new app.
+@code
+{
+    bool hasToken;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await IsLoggedIn();
+    }
+    
+    private async Task IsLoggedIn()
+    {
+        string token = await localStorage.GetItemAsync<string>("JWT");
+        
+        hasToken = token != null;
+    }
 
-<SurveyPrompt Title="How is Blazor working for you?"/>
+}

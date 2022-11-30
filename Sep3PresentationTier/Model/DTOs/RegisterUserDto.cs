@@ -2,14 +2,14 @@
 
 public class RegisterUserDto
 {
-    public string Email { get; set; }
-    public string Password { get; set; }
-    public string Name { get; set; }
+    public string userName { get; set; }
+    public string email { get; set; }
+    public string password { get; set; }
 
-    public RegisterUserDto(string email, string password, string name)
+    public RegisterUserDto(string name, string email, string password)
     {
-        Email = email;
-        Password = password;
-        Name = name;
+        this.userName = name;
+        this.email = email;
+        this.password = password;
     }
 }

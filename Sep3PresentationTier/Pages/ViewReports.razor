@@ -1,30 +1,44 @@
 ﻿@page "/ViewReports"
+@using Services.Interfaces
+@using Services.Implementations
+@using Model
+@inject IReportService ReportService
+
 
 <h3 style="text-align: center">Overview of all reports</h3>
 
 <div class="report-container">
+    @foreach (var report in reports)
+    {
+        <div>
+            @report.Description, @report.Status
+        </div>
+    }
+    
+    <div>@msg</div>
+    
     <div class="report-card">
         <a target="_blank" href="imagesForTesting/location1.jpg">
-            <img src="imagesForTesting/location1.jpg" alt="location1" class="locationImage" />
+            <img src="imagesForTesting/location1.jpg" alt="location1" class="locationImage"/>
         </a>
         <div class="location-info">
             <label> Location 1</label>
             <label> Extent of cleaning </label>
             <label> Date </label>
         </div>
-    
+
+    </div>
+
+    <div class="report-card">
+        <a target="_blank" href="imagesForTesting/location2.jpg">
+            <img src="imagesForTesting/location2.jpg" alt="location2" class="locationImage"/>
+        </a>
+        <div class="location-info">
+            <label> Location 2</label>
+            <label> Extent of cleaning </label>
+            <label> Date </label>
         </div>
-    
-        <div class="report-card">
-            <a target="_blank" href="imagesForTesting/location2.jpg">
-                <img src="imagesForTesting/location2.jpg" alt="location2" class="locationImage"/>
-            </a>
-            <div class="location-info">
-                <label> Location 2</label>
-                <label> Extent of cleaning </label>
-                <label> Date </label>
-            </div>
-        </div>
+    </div>
 </div>
     
 
@@ -34,6 +48,23 @@
 @code {
 
     private string msg = "";
+    private ICollection<Report> reports = new List<Report>();
 
-    
+    protected override async Task OnInitializedAsync()
+    {
+        await loadData();
+    }
+
+    private async Task loadData()
+    {
+        try
+        {
+            reports = await ReportService.GetAsync();
+        }
+        catch (Exception ex)
+        {
+            msg = ex.Message;
+        }
+    }
+
 }
