@@ -14,15 +14,17 @@ public class AuthService : IAuthService
         this.client = client;
     }
 
-    public async Task RegisterAsync(RegisterUserDto user)
+    public async Task<string> RegisterAsync(RegisterUserDto user)
     {
         string userAsJson = JsonSerializer.Serialize(user);
         StringContent content = new(userAsJson, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/auth/register", content);
+        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/register", content);
 
         string responseContent = await response.Content.ReadAsStringAsync();
-
+        
         if (!response.IsSuccessStatusCode)
             throw new Exception(responseContent);
+
+        return responseContent;
     }
 }

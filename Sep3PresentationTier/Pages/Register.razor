@@ -3,23 +3,42 @@
 @using Model.DTOs
 @using MudBlazor
 @using System.ComponentModel.DataAnnotations
+@using System.Runtime.InteropServices
 @using System.Text.RegularExpressions
+
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject IAuthService authService;
-@inject NavigationManager navMgr;
-<MudGrid Justify="Justify.Center">
-    <MudItem xs="12" sm="7">
-        <MudPaper Class="pa-4">
+@inject NavigationManager navManager;
+
+<MudGrid Justify="Justify.Center" Class="align-center full-height">
+    <MudItem xs="12" sm="7" Class="grid-items-center">
+        <MudPaper Class="pa-4 auth-window-paper">
             <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                <MudText Align="Align.Center" GutterBottom="true" Color="Color.Dark" Class="title-font">Register</MudText>
+                
                 <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
-                              Validation="@(new EmailAddressAttribute() { ErrorMessage = "The email address is invalid" })" @bind-Value="email"/>
+                              Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" @bind-Value="email"/>
                 <MudTextField T="string" Label="Username" Required="true" RequiredError="User name is required!" @bind-Value="name"/>
                 <MudTextField T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
                               InputType="@PasswordInput"
-                              Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
-                              RequiredError="Password is required!" @bind-Value="password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password"/>
+                              Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" 
+                              Required="true"
+                              RequiredError="Password is required!" 
+                              @bind-Value="password" 
+                              Adornment="Adornment.End" 
+                              AdornmentIcon="@PasswordInputIcon" 
+                              OnAdornmentClick="ShowPasswordClick" 
+                              AdornmentAriaLabel="Show Password"/>
                 <MudTextField T="string"
-                              Label="Password" HelperText="Repeat the password" InputType="@PasswordInput"
-                              Validation="@(new Func<string, string>(PasswordMatch))" />
+                              Label="Password" 
+                              HelperText="Repeat the password" 
+                              InputType="@PasswordRepInput" 
+                              Required="true"
+                              Validation="@(new Func<string, string>(PasswordMatch))"
+                              Adornment="Adornment.End" 
+                              AdornmentIcon="@PasswordRepInputIcon" 
+                              OnAdornmentClick="ShowPasswordRepClick" 
+                              AdornmentAriaLabel="Show Password"/>
                 @*How do we register admin/user? Is it the same.
                 <div class="d-flex"> 
                     <MudRadioGroup T="string" Required="true" RequiredError="Account type is required!">
@@ -27,11 +46,9 @@
                         <MudRadio Option="@("Administrator")">Administrator</MudRadio> 
                     </MudRadioGroup> 
                  </div> *@
-                <div class="d-flex align-center justify-space-between">
-                    @*Possibly later for ToS verification, if we want to be fancy? :D 
-                    <MudCheckBox T="bool" Required="true" RequiredError="You must agree" Label="I agree!"  /> *@
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="CreateAsync">Register</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" DisableElevation="true" OnClick="@(() => form.Reset())" Class="mx-2">Reset</MudButton>
+                <div class="d-flex align-center justify-space-around mt-5">
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/login"))">Already have account?</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="CreateAsync">Register</MudButton>
                 </div>
             </MudForm>
             @if (!string.IsNullOrWhiteSpace(msg))
@@ -70,22 +87,41 @@
     private string name = "";
     private string msg = "";
     
-    bool isShow;
+    bool isPasswordShowed;
+    bool isPasswordRepShowed;
+    
     InputType PasswordInput = InputType.Password;
-    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    InputType PasswordRepInput = InputType.Password;
 
-    void ButtonTestclick()
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;    
+    string PasswordRepInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ShowPasswordClick()
     {
-        @if (isShow)
+        @if (isPasswordShowed)
         {
-            isShow = false;
+            isPasswordShowed = false;
             PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
             PasswordInput = InputType.Password;
         }
         else {
-            isShow = true;
+            isPasswordShowed = true;
             PasswordInputIcon = Icons.Material.Filled.Visibility;
             PasswordInput = InputType.Text;
+        }
+    }
+    void ShowPasswordRepClick()
+    {
+        @if (isPasswordShowed)
+        {
+            isPasswordShowed = false;
+            PasswordRepInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordRepInput = InputType.Password;
+        }
+        else {
+            isPasswordShowed = true;
+            PasswordRepInputIcon = Icons.Material.Filled.Visibility;
+            PasswordRepInput = InputType.Text;
         }
     }
 
@@ -118,11 +154,11 @@
         msg = "";
         try
         {
-            await authService.RegisterAsync(new RegisterUserDto(email, password, name));
-            email = "";
-            password = "";
-            msg = "Account created successfully";
-            navMgr.NavigateTo("/login");
+            var token = await authService.RegisterAsync(new RegisterUserDto(name, email, password));
+            
+            await localStorage.SetItemAsync("JWT", token);
+
+            navManager.NavigateTo("/", forceLoad: true);
         }
         catch (Exception e)
         {
