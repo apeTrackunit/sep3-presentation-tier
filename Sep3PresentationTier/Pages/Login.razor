@@ -1,17 +1,19 @@
 @page "/Login"
 @using Services.Interfaces
 @using Model
-@inject IAuthService authService;
-@inject NavigationManager navMgr;
-@using MudBlazor
 @using System.ComponentModel.DataAnnotations
-@using System.Security.AccessControl
 @using Microsoft.AspNetCore.Components
+@using Model.DTOs
 
-<MudContainer Class="d-flex justify-center align-center">
-    <MudPaper Elevation="1" Class="pa-4" Style="width: 30%">
-        <MudContainer Class="d-flex flex-column justify-center gap-3">
-            <MudText Align="Align.Center" Typo="Typo.h4" Style="text-underline: auto">@Title</MudText>
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager navManager;
+@inject IAuthService authService;
+
+<MudGrid Justify="Justify.Center" Class="align-center full-height">
+    <MudItem xs="12" sm="7" Class="grid-items-center">
+        <MudPaper Class="pa-4 auth-window-paper">
+            <MudText Align="Align.Center" GutterBottom="true" Color="Color.Dark" Class="title-font">Login</MudText>
+
             <MudForm @ref="form" @bind-isValid="success" @bind-Errors="errors">
                 <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
                               Validation="@(new EmailAddressAttribute() { ErrorMessage = "The email address is invalid" })" @bind-Value="email"/>
@@ -20,21 +22,18 @@
                               RequiredError="Password is required!" @bind-Value="password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
                               OnAdornmentClick="TogglePassword" AdornmentAriaLabel="Show Password"/>
             </MudForm>
-            <MudContainer Class="d-flex flex-row-reverse justify-right gap-2">
-                <MudButton  Variant="Variant.Filled" Color="Color.Primary" OnClick="LoginOnClick">@ButtonText</MudButton>
-            </MudContainer>
-        </MudContainer>
-    </MudPaper>
-</MudContainer>
+            <div class="d-flex align-center justify-space-around mt-5">
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/register"))">Don't have account?</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="LoginAsync">Login</MudButton></div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     bool success;
     string[] errors = { };
     MudTextField<string> pwField;
     MudForm form;
-    public string ButtonText { get; set; } = "Login";
-    public string Title { get; set; } = "Welcome, please log in.";
-    public string BackText { get; set; } = "Back";
 
     private string email = "";
     private string password = "";
@@ -61,24 +60,16 @@
         }
     }
 
-    void LoginOnClick()
-    {
-        Console.WriteLine("Logged IN:" + email + " " + password);
-        LoginAsync();
-    }
-    
     private async Task LoginAsync()
     {
         resultMsg = "";
 
         try
         {
-            await authService.LoginAsync(new UserLoginDto(email, password));
-            email = "";
-            password = "";
-            resultMsg = "Logged in";
-            navMgr.NavigateTo("/");
-            Console.WriteLine(resultMsg + ": " + email);
+            var token = await authService.LoginAsync(new LoginUserDto(email, password));
+            await localStorage.SetItemAsync("JWT", token);
+
+            navManager.NavigateTo("/", forceLoad: true);
         }
         catch (Exception e)
         {

@@ -1,7 +1,6 @@
 using System.Text;
 using System.Security.Claims;
 using System.Text.Json;
-using Model;
 using Model.DTOs;
 using Services.Interfaces;
 
@@ -10,8 +9,6 @@ namespace Services.Implementations;
 public class AuthService : IAuthService
 {
     private readonly HttpClient client;
-    public Action<ClaimsPrincipal> OnAuthStateChange { get; set; } = null;
-
     public AuthService(HttpClient client)
     {
         this.client = client;
@@ -31,11 +28,11 @@ public class AuthService : IAuthService
         return responseContent;
     }
     
-    public async Task LoginAsync(UserLoginDto user)
+    public async Task<string> LoginAsync(LoginUserDto user)
     {
         string userAsJson = JsonSerializer.Serialize(user);
         StringContent content = new(userAsJson, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/auth/login", content);
+        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/login", content);
 
         string responseContent = await response.Content.ReadAsStringAsync();
 
@@ -45,11 +42,8 @@ public class AuthService : IAuthService
         }
 
         string token = responseContent;
-        Jwt = token;
-        ClaimsPrincipal principal = CreateClaimsPrincipal();
-
-        OnAuthStateChange.Invoke(principal);
-
+        
+        return token;
     }
     
     //JWT interaction
@@ -77,16 +71,16 @@ public class AuthService : IAuthService
         return Convert.FromBase64String(base64);
     }
     
-    private static ClaimsPrincipal CreateClaimsPrincipal()
+    private static ClaimsPrincipal CreateClaimsPrincipal(String jwt)
     {
-        if (string.IsNullOrEmpty(Jwt))
+        if (string.IsNullOrEmpty(jwt))
         {
             return new ClaimsPrincipal();
         }
 
-        IEnumerable<Claim> claims = ParseClaimsFromJwt(Jwt);
+        IEnumerable<Claim> claims = ParseClaimsFromJwt(jwt);
     
-        ClaimsIdentity identity = new(claims, "jwt");
+        ClaimsIdentity identity = new(claims, jwt);
 
         ClaimsPrincipal principal = new(identity);
         return principal;

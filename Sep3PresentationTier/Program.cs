@@ -34,5 +34,4 @@ builder.Services.AddBlazoredLocalStorage(config =>
 
 builder.Services.AddBlazoredLocalStorage();
 
-
 await builder.Build().RunAsync();
