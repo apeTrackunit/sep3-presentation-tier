@@ -1,0 +1,82 @@
+@page "/Login"
+@using Services.Interfaces
+@using Model
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components
+@using Model.DTOs
+
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager navManager;
+@inject IAuthService authService;
+
+<MudGrid Justify="Justify.Center" Class="align-center full-height">
+    <MudItem xs="12" sm="7" Class="grid-items-center">
+        <MudPaper Class="pa-4 auth-window-paper">
+            <MudText Align="Align.Center" GutterBottom="true" Color="Color.Dark" Class="title-font">Login</MudText>
+
+            <MudForm @ref="form" @bind-isValid="success" @bind-Errors="errors">
+                <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
+                              Validation="@(new EmailAddressAttribute() { ErrorMessage = "The email address is invalid" })" @bind-Value="email"/>
+                <MudTextField T="string" Label="Password" Required="true" @ref="pwField"
+                              InputType="@PasswordInput"
+                              RequiredError="Password is required!" @bind-Value="password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                              OnAdornmentClick="TogglePassword" AdornmentAriaLabel="Show Password"/>
+            </MudForm>
+            <div class="d-flex align-center justify-space-around mt-5">
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/register"))">Don't have account?</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="LoginAsync">Login</MudButton></div>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField;
+    MudForm form;
+
+    private string email = "";
+    private string password = "";
+    private string resultMsg = "";
+
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void TogglePassword()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        resultMsg = "";
+
+        try
+        {
+            var token = await authService.LoginAsync(new LoginUserDto(email, password));
+            await localStorage.SetItemAsync("JWT", token);
+
+            navManager.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            resultMsg = e.Message;
+        }
+    }
+
+}
+
