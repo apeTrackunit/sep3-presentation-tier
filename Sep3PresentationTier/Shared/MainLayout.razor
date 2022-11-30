@@ -1,17 +1,66 @@
 ﻿@inherits LayoutComponentBase
 
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager navManager;
+
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
 <div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
+    @if (hasToken)
+    {
+        <div class="sidebar">
+            <NavMenu/>
+        </div>
+    }
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
+         @if (hasToken)
+         {
+             <div class="top-row px-4">
+                 <MudButton Variant="Variant.Text" Color="Color.Transparent" Class="ml-auto" @onclick="LogOut">Log out</MudButton>
+             </div>
+         }
+
 
         <article class="content px-4">
-            @Body
+            @if (hasToken || navManager.Uri.Contains("/login") || navManager.Uri.Contains("/register") || navManager.Uri.Equals(navManager.BaseUri))
+            {
+                @Body
+            }
+            else
+            {
+                <MudGrid Justify="Justify.Center" Class="align-center full-height">
+                    <MudItem xs="12" sm="7" Class="grid-items-center">
+                        <div>Please login to access this page</div>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-5" @onclick="@(() => navManager.NavigateTo("/login"))">Login</MudButton>
+                    </MudItem>
+                </MudGrid>
+            }
         </article>
     </main>
 </div>
+
+@code
+{
+    bool hasToken;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await IsLoggedIn();
+    }
+    
+    private async Task IsLoggedIn()
+    {
+        string token = await localStorage.GetItemAsync<string>("JWT");
+        
+        hasToken = token != null;
+    }
+    
+    private async Task LogOut()
+    {
+        await localStorage.RemoveItemAsync("JWT");
+        navManager.NavigateTo("/", forceLoad: true);
+    }
+
+}
