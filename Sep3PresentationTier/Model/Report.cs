@@ -10,6 +10,11 @@ public class Report
     
     public Location Location { get; set; }
 
+    public Report()
+    {
+        
+    }
+
     public Report(int[] date, int[] time, byte[]? proof, string description, string status, Location location)
     {
         Date = date;

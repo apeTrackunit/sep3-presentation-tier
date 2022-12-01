@@ -24,7 +24,8 @@
             </MudForm>
             <div class="d-flex align-center justify-space-around mt-5">
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/register"))">Don't have account?</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="LoginAsync">Login</MudButton></div>
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="LoginAsync">Login</MudButton>
+                </div>
         </MudPaper>
     </MudItem>
 </MudGrid>

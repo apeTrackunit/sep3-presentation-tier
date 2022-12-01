@@ -2,15 +2,18 @@
 @using Services.Interfaces
 @using Model
 @inject IReportService ReportService
+@inject NavigationManager navManager;
 
-<h3 style="text-align: center">Overview of all reports</h3>
+<h2 style="text-align: center">Reports overview</h2>
 
-<MudGrid>
+<MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PlusOne" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
+
+<MudGrid Class="report-list">
     
     @foreach (var report in reports)
     {
         <MudItem xs="6">
-            <MudCardMedia Image="css/imgs/killme.jpg" ></MudCardMedia>
+            <MudCardMedia Image="css/imgs/killme.jpg"></MudCardMedia>
             <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
                 <MudCardContent>
                     <MudText Typo="Typo.body1"> Latitude: @report.Location.Latitude</MudText>
@@ -22,25 +25,21 @@
                     <MudText Typo="Typo.body2"> Time: @report.Time[0]:@report.Time[1]</MudText>
                     <MudText Typo="Typo.body2"> Status @report.Status</MudText>
                     <br>
-                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success"> Create Event</MudButton>
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Create Event</MudButton>
 
                 </MudCardContent>
-                </MudCard>
+            </MudCard>
         </MudItem>
     }
 
     <div>@msg</div>
-
 </MudGrid>
-
 
 @code {
 
     private string msg = "";
     private ICollection<Report> reports = new List<Report>();
 
-  
-    
     protected override async Task OnInitializedAsync()
     {
         await loadData();
@@ -50,7 +49,12 @@
     {
         try
         {
-            reports = await ReportService.GetAsync();
+            //reports = await ReportService.GetAsync();
+
+            for (int i = 0; i < 10; i++)
+            {
+                reports.Add(new Report(new []{2011, 8, 11}, new []{11, 11, 11}, null, "Very messy place", "NOT APPROVED", new Location(67,82,1)));
+            }
         }
         catch (Exception ex)
         {
