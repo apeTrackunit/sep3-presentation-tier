@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Blazored.LocalStorage;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Sep3PresentationTier;
+using Sep3PresentationTier.Shared;
 using Services.Implementations;
 using Services.Interfaces;
 
@@ -20,6 +22,7 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddMudServices();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<TokenService>();
 builder.Services.AddMudServices();
 
 builder.Services.AddBlazoredLocalStorage(config =>
