@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Model;
+using Model.DTOs;
 using Sep3PresentationTier.Shared;
 using Services.Interfaces;
 
@@ -35,10 +36,20 @@ public class ReportService : IReportService
     public async Task<bool> CreateAsync(Report report)
     {
         await tokenService.AttachToken(client);
+
+        CreateReportDto createReportDto = new CreateReportDto()
+        {
+            date = report.Date,
+            time = report.Time,
+            description = report.Description,
+            location = report.Location,
+            proof = report.Proof,
+            status = report.Status
+        };
         
-        string userAsJson = JsonSerializer.Serialize(report);
-        StringContent content = new(userAsJson, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/report", content);
+        string reportAsJson = JsonSerializer.Serialize(createReportDto);
+        StringContent content = new(reportAsJson, Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/reports", content);
 
         string responseContent = await response.Content.ReadAsStringAsync();
 
