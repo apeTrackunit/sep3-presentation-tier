@@ -2,6 +2,7 @@ namespace Model;
 
 public class Report
 {
+    public string Id { get; set; }
     public int[] Date { get; set; }
     public int[] Time { get; set; }
     public byte[]? Proof { get; set; }
@@ -15,8 +16,9 @@ public class Report
         
     }
 
-    public Report(int[] date, int[] time, byte[]? proof, string description, string status, Location location)
+    public Report(string id, int[] date, int[] time, byte[]? proof, string description, string status, Location location)
     {
+        Id = id;
         Date = date;
         Time = time;
         Proof = proof;

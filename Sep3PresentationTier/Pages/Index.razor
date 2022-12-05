@@ -1,9 +1,12 @@
 ﻿@page "/"
+@using System.Security.Claims
+@using Services.Implementations
 
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 
 @if (@hasToken)
 {
+    <div>Hi @name! (@role)</div>
     <div>Logged in!</div>
 } else
 {
@@ -14,7 +17,10 @@
 @code
 {
     bool hasToken;
-    
+    string name;
+    string role;
+    IEnumerable<Claim> claims;
+
     protected override async Task OnInitializedAsync()
     {
         await IsLoggedIn();
@@ -23,7 +29,10 @@
     private async Task IsLoggedIn()
     {
         string token = await localStorage.GetItemAsync<string>("JWT");
-        
+        claims = AuthService.CreateClaimsPrincipal(token).Claims;
+        name = claims.First(claim => claim.Type.Equals("sub")).Value;
+        role = claims.First(claim => claim.Type.Equals("role")).Value;
+
         hasToken = token != null;
     }
 

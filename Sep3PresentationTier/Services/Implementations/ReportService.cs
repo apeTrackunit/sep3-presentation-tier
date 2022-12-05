@@ -61,4 +61,22 @@ public class ReportService : IReportService
         
         return true;
     }
+
+    public async Task<bool> ApproveAsync(string reportId, string status)
+    {
+        UpdateReportDto updateReportDto = new UpdateReportDto(status);
+        string updateReportAsJson = JsonSerializer.Serialize(updateReportDto);
+        
+        StringContent content = new(updateReportAsJson, Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await client.PatchAsync($"http://localhost:8910/reports/{reportId}", content);
+
+        string responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception(responseContent);
+        }
+
+        return true;
+    }
 }

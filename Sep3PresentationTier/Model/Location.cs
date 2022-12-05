@@ -17,4 +17,8 @@ public class Location
     {
         Size = size;
     }
+
+    public Location()
+    {
+    }
 }

@@ -112,7 +112,7 @@
         var tempDate = new[] {Date?.Year ?? 1999, Date?.Month ?? 1, Date?.Day ?? 1};
         var tempTime = new[] {Time?.Hours ?? 1, Time?.Minutes ?? 1, Time?.Seconds ?? 1};
         
-        await SaveReport.InvokeAsync(new Report(tempDate, tempTime, Report.Proof, Report.Description, Report.Status, new Location(Report.Location.Latitude, Report.Location.Longitude, Report.Location.Size)));  
+        await SaveReport.InvokeAsync(new Report(Report.Id, tempDate, tempTime, Report.Proof, Report.Description, Report.Status, new Location(Report.Location.Latitude, Report.Location.Longitude, Report.Location.Size)));  
     }
 
     protected override void OnInitialized()
