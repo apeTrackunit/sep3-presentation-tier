@@ -2,20 +2,20 @@ namespace Model;
 
 public class Location
 {
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
-    public int Size { get; set; }
+    public double latitude { get; set; }
+    public double longitude { get; set; }
+    public int size { get; set; }
 
     public Location(double latitude, double longitude, int size)
     {
-        Latitude = latitude;
-        Longitude = longitude;
-        Size = size;
+        latitude = latitude;
+        longitude = longitude;
+        size = size;
     }
 
     public Location(int size)
     {
-        Size = size;
+        size = size;
     }
 
     public Location()
