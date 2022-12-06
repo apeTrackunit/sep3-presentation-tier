@@ -10,9 +10,9 @@
                 <MudPaper Class="pa-4 flex-1 card">
                     <MudText Align="Align.Center" Color="Color.Default">Location</MudText>
 
-                    <MudTextField T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.latitude"/>
-                    <MudTextField T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.longitude"/>
-                    <MudSelect T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.size" AnchorOrigin="Origin.BottomCenter">
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.latitude"/>
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.longitude"/>
+                    <MudSelect Disabled="@ViewType.Equals("detail")" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.size" AnchorOrigin="Origin.BottomCenter">
                         <MudSelectItem Value="@(1)">Small</MudSelectItem>
                         <MudSelectItem Value="@(2)">Medium</MudSelectItem>
                         <MudSelectItem Value="@(3)">Large</MudSelectItem>
@@ -21,14 +21,14 @@
             </MudItem>
         
         
-            @if (ViewType == "detail")
+            @if (ViewType.Equals("detail"))
             {
                 <MudItem xs="10" sm="5" Class="flex-1">
                     <MudPaper Class="pa-4 flex-1 card">
                         <MudText Align="Align.Center" Color="Color.Default">When was the place discoverd?</MudText>
 
-                        <MudDatePicker Label="Date" @bind-Date="@Date" Required="true" RequiredError="Required!"/>
-                        <MudTimePicker Label="Time" @bind-Time="@Time" Required="true" RequiredError="Required!"/>
+                        <MudDatePicker Disabled="@ViewType.Equals("detail")" Label="Date" @bind-Date="@Date" Required="true" RequiredError="Required!"/>
+                        <MudTimePicker Disabled="@ViewType.Equals("detail")" Label="Time" @bind-Time="@Time" Required="true" RequiredError="Required!"/>
                     </MudPaper>
                 </MudItem>
             }
@@ -38,13 +38,13 @@
                     <MudText Align="Align.Center" Color="Color.Default">Others</MudText>
                     @if (ViewType != "create")
                     {
-                        <MudSelect T="string" Label="Status" Required="true" RequiredError="Required!" @bind-Value="Report.Status" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelect Disabled="@ViewType.Equals("detail")" T="string" Label="Status" Required="true" RequiredError="Required!" @bind-Value="Report.Status" AnchorOrigin="Origin.BottomCenter">
                             <MudSelectItem Value="@("Under Review")"/>
                             <MudSelectItem Value="@("Approved")"/>
                             <MudSelectItem Value="@("Not Approved")"/>
                         </MudSelect>
                     }
-                    <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="Report.Description"/>
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="Report.Description"/>
                 </MudPaper>
             </MudItem>
 
@@ -66,7 +66,7 @@
                         </div>
                     }
                 }
-                <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
+                <MudFileUpload Disabled="@ViewType.Equals("detail")" Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
                     <ButtonTemplate>
                         <MudButton HtmlTag="label"
                                    Variant="Variant.Filled"
