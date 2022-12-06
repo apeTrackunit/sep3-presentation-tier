@@ -17,8 +17,17 @@
 
 @if (!isAdmin)
 {
-    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PlusOne" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
+    <MudButton Variant="Variant.Filled" IconClass="@Icons.Material.Filled.PlusOne" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
+    <MudForm>
+        <MudRadioGroup @bind-SelectedOption="@SelectedOption">
+            <MudRadio Option="@("Approved")" Color="Color.Primary">Approved</MudRadio>
+            <MudRadio Option="@("Submitted by me")" Color="Color.Secondary">Submitted by me</MudRadio>
+        </MudRadioGroup>
+    </MudForm>
+    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())"></MudButton>
 }
+
+
 
 <MudGrid Class="report-list">
 
@@ -67,9 +76,10 @@
 </MudGrid>
 
 @code {
-    private bool loading = true;
+    private bool loading = false;
     private string msg = "";
     private ICollection<Report> reports = new List<Report>();
+    public string SelectedOption { get; set; }
 
     //Set to true, so that the new report button doesn't show on load. When the website connects to the logic tier,
     //the role is updated, so it should not be a security vulnerability, no functionality
@@ -78,24 +88,24 @@
     
     protected override async Task OnInitializedAsync()
     {
-        await loadData();
+        SelectedOption = "Approved";
+        string token = await localStorage.GetItemAsync<string>("JWT");
+        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
+        isAdmin = claims.First(claim => claim.Type.Equals("role")).Value.Equals("Admin");
     }
 
     private async Task loadData()
     {
+        loading = true;
         try
         {
-            reports = await ReportService.GetAsync();
+            reports = await ReportService.GetAsync(SelectedOption.Equals("Approved"));
         }
         catch (Exception ex)
         {
             msg = ex.Message;
         }
-
         loading = false;
-        string token = await localStorage.GetItemAsync<string>("JWT");
-        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
-        isAdmin = claims.First(claim => claim.Type.Equals("role")).Value.Equals("Admin");
     }
 
     private async Task update(string reportId, string status)
