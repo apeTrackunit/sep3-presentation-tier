@@ -39,8 +39,9 @@
                     @if (ViewType != "create")
                     {
                         <MudSelect T="string" Label="Status" Required="true" RequiredError="Required!" @bind-Value="Report.Status" AnchorOrigin="Origin.BottomCenter">
-                            <MudSelectItem Value="@("Confirmed")"/>
-                            <MudSelectItem Value="@("Not Confirmed")"/>
+                            <MudSelectItem Value="@("Under Review")"/>
+                            <MudSelectItem Value="@("Approved")"/>
+                            <MudSelectItem Value="@("Not Approved")"/>
                         </MudSelect>
                     }
                     <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="Report.Description"/>
