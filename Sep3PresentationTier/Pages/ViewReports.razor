@@ -1,9 +1,7 @@
 @page "/Reports"
 @using Services.Interfaces
 @using Model
-@using System.Net.Mime
 @using System.Security.Claims
-@using Model.DTOs
 @using Services.Implementations
 @inject IReportService ReportService
 @inject NavigationManager navManager;
@@ -12,65 +10,88 @@
 
 @if (role != null && role.Equals("User"))
 {
-    <MudContainer Class="d-flex align-items-end justify-end">
-        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>    
+    <MudContainer Class="d-flex align-center justify-space-between m-0">
+        <MudForm Class="d-flex align-center">
+            <MudRadioGroup @bind-SelectedOption="@SelectedOption">
+                <MudRadio Option="@("Approved")" Color="Color.Primary">Approved</MudRadio>
+                <MudRadio Option="@("Submitted by me")" Color="Color.Secondary">Submitted by me</MudRadio>
+            </MudRadioGroup>
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())"></MudButton>
+        </MudForm>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
     </MudContainer>
 }
 
-<MudGrid Class="report-list">
-    @foreach (var report in reports)
-    {
-        <MudItem xs="12" sm="8" md="4">
-            <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
-                <MudCardContent>
-                    <MudText Typo="Typo.body1"> Latitude: @report.Location.latitude</MudText>
-                    <MudText Typo="Typo.body1">Longtitude: @report.Location.longitude</MudText>
-                    <MudText Typo="Typo.body1">Size: @report.Location.size </MudText>
-                    <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
-                    <br>
-                    <MudText Typo="Typo.body2">
-                        Date: @report.Date[0].ToString("0000")-@report.Date[1].ToString("00")-@report.Date[2].ToString("00")
-                    </MudText>
-                    <MudText Typo="Typo.body2">
-                        Time: @report.Time[0].ToString("00"):@report.Time[1].ToString("00"):@report.Time[2].ToString("00")
-                    </MudText>
-                    <MudText Typo="Typo.body2"> Status @report.Status</MudText>
-                    <br>
-                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" OnClick='() => navManager.NavigateTo("/reports/detail/" + report.Id)'>Detail</MudButton>
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-    }
+@if (loading)
+{
+    <MudText Align="Align.Center" Color="Color.Default">Loading</MudText>
+}
+else
+{
+    <MudGrid Class="report-list">
+        @foreach (var report in reports)
+        {
+            <MudItem xs="12" sm="8" md="4">
+                <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
+                    <MudCardContent>
+                        <MudText Typo="Typo.body1"> Latitude: @report.Location.latitude</MudText>
+                        <MudText Typo="Typo.body1">Longtitude: @report.Location.longitude</MudText>
+                        <MudText Typo="Typo.body1">Size: @report.Location.size </MudText>
+                        <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
+                        <br>
+                        <MudText Typo="Typo.body2">
+                            Date: @report.Date[0].ToString("0000")-@report.Date[1].ToString("00")-@report.Date[2].ToString("00")
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Time: @report.Time[0].ToString("00"):@report.Time[1].ToString("00"):@report.Time[2].ToString("00")
+                        </MudText>
+                        <MudText Typo="Typo.body2"> Status @report.Status</MudText>
+                        <br>
+                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" OnClick='() => navManager.NavigateTo("/reports/detail/" + report.Id)'>Details</MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
 
-    <div>@msg</div>
-</MudGrid>
+        <div>@msg</div>
+    </MudGrid>
+}
 
 @code {
-
+    private bool loading = false;
     private string msg = "";
     private ICollection<Report> reports = new List<Report>();
-    
+    public string SelectedOption { get; set; }
     public string? role { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await loadData();
-        
+        SelectedOption = "Approved";
         string token = await localStorage.GetItemAsync<string>("JWT");
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         role = claims.First(claim => claim.Type.Equals("role")).Value;
+
+        if (role.Equals("Admin"))
+        {
+            await loadData();
+        }
     }
 
     private async Task loadData()
     {
         try
         {
-            var approved = false;
-            reports = await ReportService.GetReportsAsync(approved);
+            loading = true;
+            reports = await ReportService.GetReportsAsync(SelectedOption.Equals("Approved"));
         }
         catch (Exception ex)
         {
             msg = ex.Message;
         }
+        finally
+        {
+            loading = false;
+        }
+
     }
 }
