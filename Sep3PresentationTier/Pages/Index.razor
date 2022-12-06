@@ -29,6 +29,8 @@
     private async Task IsLoggedIn()
     {
         string token = await localStorage.GetItemAsync<string>("JWT");
+        if (token == null)
+            return;
         claims = AuthService.CreateClaimsPrincipal(token).Claims;
         name = claims.First(claim => claim.Type.Equals("sub")).Value;
         role = claims.First(claim => claim.Type.Equals("role")).Value;
