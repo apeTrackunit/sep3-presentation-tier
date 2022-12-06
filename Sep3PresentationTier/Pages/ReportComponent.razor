@@ -1,0 +1,144 @@
+@using Model
+@inject NavigationManager navManager;
+
+<MudForm @ref="form" Class="page-content" @bind-isValid="success" @bind-Errors="errors">
+    <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
+            <MudItem xs="10" sm="5" Class="flex-1">
+                <MudPaper Class="pa-4 flex-1 card">
+                    <MudText Align="Align.Center" Color="Color.Default">Location</MudText>
+
+                    <MudTextField T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.Latitude"/>
+                    <MudTextField T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Longitude"/>
+                    <MudSelect T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem Value="@(1)">Small</MudSelectItem>
+                        <MudSelectItem Value="@(2)">Medium</MudSelectItem>
+                        <MudSelectItem Value="@(3)">Large</MudSelectItem>
+                    </MudSelect>
+                </MudPaper>
+            </MudItem>
+        
+        
+            <MudItem xs="10" sm="5" Class="flex-1">
+                <MudPaper Class="pa-4 flex-1 card">
+                    <MudText Align="Align.Center" Color="Color.Default">When was the place discoverd?</MudText>
+
+                    <MudDatePicker Label="Date" @bind-Date="@Date" Required="true" RequiredError="Required!"/>
+                    <MudTimePicker Label="Time" @bind-Time="@Time" Required="true" RequiredError="Required!"/>
+                </MudPaper>
+            </MudItem>   
+        
+            <MudItem xs="10" sm="5" Class="flex-1">
+                <MudPaper Class="pa-4 flex-1 card">
+                    <MudText Align="Align.Center" Color="Color.Default">Others</MudText>
+
+                    <MudSelect T="string" Label="Status" Required="true" RequiredError="Required!" @bind-Value="Report.Status" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelectItem Value="@("Confirmed")"/>
+                        <MudSelectItem Value="@("Not Confirmed")"/>
+                    </MudSelect>
+
+                    <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" @bind-Value="Report.Description"/>
+                </MudPaper>
+            </MudItem>
+
+        <MudItem xs="10" sm="5">
+            <MudPaper Class="pa-4 flex-1 card">
+                <MudText Align="Align.Center" Color="Color.Default">Picture</MudText>
+
+                @{
+                    if (Report?.Proof != null)
+                    {
+                        var base64 = Convert.ToBase64String(Report.Proof);
+                        var imgSrc = String.Format("data:{0};base64,{1}", "image/jpg", base64);
+                        <img src="@imgSrc" style="width: 400px"/>
+                    }
+                    else
+                    {
+                        <div style="width: 400px; height: 400px; background-color: #6c757d;" Class="d-flex align-center justify-center">
+                            <MudText Align="Align.Center" Style="color: #ffffff">No image</MudText>
+                        </div>
+                    }
+                }
+                <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
+                    <ButtonTemplate>
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Filled.CloudUpload"
+                                   for="@context">
+                            Upload Files
+                        </MudButton>
+                    </ButtonTemplate>
+                    <SelectedTemplate >
+                        @if (context != null)
+                        {
+                            <MudText Align="Align.Center">@context.Name</MudText>
+                        }
+                    </SelectedTemplate>
+                </MudFileUpload>
+
+            </MudPaper>
+        </MudItem>
+    </div>
+    <MudItem>
+        <div class="d-flex align-center justify-space-around mt-5">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/reports"))">Back to reports</MudButton>
+
+            @if (ViewType.Equals("create"))
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="ChangeValue">Save</MudButton>
+            }
+        </div>
+    </MudItem>        
+</MudForm>
+
+@code {
+    [Parameter]  
+    public string ViewType { get; set; }
+    
+    [Parameter]
+    public EventCallback<string> ViewTypeChanged { get; set; }
+    
+    [Parameter]  
+    public Report? Report { get; set; }
+    
+    [Parameter]
+    public EventCallback<Report> ReportChanged { get; set; }
+    
+    [Parameter]
+    public EventCallback<Report> SaveReport { get; set; }
+    
+    private async Task ChangeValue()
+    {
+        var tempDate = new[] {Date?.Year ?? 1999, Date?.Month ?? 1, Date?.Day ?? 1};
+        var tempTime = new[] {Time?.Hours ?? 1, Time?.Minutes ?? 1, Time?.Seconds ?? 1};
+        
+        await SaveReport.InvokeAsync(new Report(Report.Id, tempDate, tempTime, Report.Proof, Report.Description, Report.Status, new Location(Report.Location.Latitude, Report.Location.Longitude, Report.Location.Size)));  
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Report?.Date != null || Report?.Time != null)
+        {
+            Date = new DateTime(Report.Date[0], Report.Date[1], Report.Date[2]);
+            Time = new TimeSpan(Report.Time[0], Report.Time[1], Report.Time[2]);
+        }
+    }
+
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField;
+    MudForm form;
+    
+    public DateTime? Date { get; set; }
+    public TimeSpan? Time { get; set; }
+    
+    private async void UploadFile(IBrowserFile file)
+    {
+        using (var ms = new MemoryStream())
+        {
+            await file.OpenReadStream(15*1000*1000).CopyToAsync(ms);
+            Report.Proof = ms.ToArray();
+        }
+    }
+
+}

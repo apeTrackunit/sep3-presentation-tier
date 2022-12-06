@@ -42,7 +42,6 @@ public class AuthService : IAuthService
         }
 
         string token = responseContent;
-        
         return token;
     }
     
@@ -71,7 +70,7 @@ public class AuthService : IAuthService
         return Convert.FromBase64String(base64);
     }
     
-    private static ClaimsPrincipal CreateClaimsPrincipal(String jwt)
+    public static ClaimsPrincipal CreateClaimsPrincipal(String jwt)
     {
         if (string.IsNullOrEmpty(jwt))
         {
