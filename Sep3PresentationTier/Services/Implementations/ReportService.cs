@@ -18,11 +18,12 @@ public class ReportService : IReportService
         this.tokenService = tokenService;
     }
 
-    public async Task<ICollection<Report>> GetAsync()
+    public async Task<ICollection<Report>> GetAsync(bool approved)
     {
         await tokenService.AttachToken(client);
         
-        HttpResponseMessage response = await client.GetAsync("/reports");
+
+        HttpResponseMessage response = await client.GetAsync($"/reports?approved={approved}");
         string result = await response.Content.ReadAsStringAsync();
         
         if (!response.IsSuccessStatusCode)
