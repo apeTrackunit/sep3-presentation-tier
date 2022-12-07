@@ -1,5 +1,8 @@
 @using Model
+@using Services.Implementations
+@using System.Security.Claims
 @inject NavigationManager navManager;
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 
 <MudForm @ref="form" Class="page-content" @bind-isValid="success" @bind-Errors="errors">
     <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
@@ -7,9 +10,9 @@
                 <MudPaper Class="pa-4 flex-1 card">
                     <MudText Align="Align.Center" Color="Color.Default">Location</MudText>
 
-                    <MudTextField T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.Latitude"/>
-                    <MudTextField T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Longitude"/>
-                    <MudSelect T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.latitude"/>
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.longitude"/>
+                    <MudSelect Disabled="@ViewType.Equals("detail")" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.size" AnchorOrigin="Origin.BottomCenter">
                         <MudSelectItem Value="@(1)">Small</MudSelectItem>
                         <MudSelectItem Value="@(2)">Medium</MudSelectItem>
                         <MudSelectItem Value="@(3)">Large</MudSelectItem>
@@ -18,25 +21,30 @@
             </MudItem>
         
         
-            <MudItem xs="10" sm="5" Class="flex-1">
-                <MudPaper Class="pa-4 flex-1 card">
-                    <MudText Align="Align.Center" Color="Color.Default">When was the place discoverd?</MudText>
+            @if (ViewType.Equals("detail"))
+            {
+                <MudItem xs="10" sm="5" Class="flex-1">
+                    <MudPaper Class="pa-4 flex-1 card">
+                        <MudText Align="Align.Center" Color="Color.Default">When was the place discoverd?</MudText>
 
-                    <MudDatePicker Label="Date" @bind-Date="@Date" Required="true" RequiredError="Required!"/>
-                    <MudTimePicker Label="Time" @bind-Time="@Time" Required="true" RequiredError="Required!"/>
-                </MudPaper>
-            </MudItem>   
+                        <MudDatePicker Disabled="@ViewType.Equals("detail")" Label="Date" @bind-Date="@Date" Required="true" RequiredError="Required!"/>
+                        <MudTimePicker Disabled="@ViewType.Equals("detail")" Label="Time" @bind-Time="@Time" Required="true" RequiredError="Required!"/>
+                    </MudPaper>
+                </MudItem>
+            }
         
             <MudItem xs="10" sm="5" Class="flex-1">
                 <MudPaper Class="pa-4 flex-1 card">
                     <MudText Align="Align.Center" Color="Color.Default">Others</MudText>
-
-                    <MudSelect T="string" Label="Status" Required="true" RequiredError="Required!" @bind-Value="Report.Status" AnchorOrigin="Origin.BottomCenter">
-                        <MudSelectItem Value="@("Confirmed")"/>
-                        <MudSelectItem Value="@("Not Confirmed")"/>
-                    </MudSelect>
-
-                    <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" @bind-Value="Report.Description"/>
+                    @if (ViewType != "create")
+                    {
+                        <MudSelect Disabled="@ViewType.Equals("detail")" T="string" Label="Status" Required="true" RequiredError="Required!" @bind-Value="Report.Status" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelectItem Value="@("Under Review")"/>
+                            <MudSelectItem Value="@("Approved")"/>
+                            <MudSelectItem Value="@("Not Approved")"/>
+                        </MudSelect>
+                    }
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="Report.Description"/>
                 </MudPaper>
             </MudItem>
 
@@ -58,7 +66,7 @@
                         </div>
                     }
                 }
-                <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
+                <MudFileUpload Disabled="@ViewType.Equals("detail")" Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
                     <ButtonTemplate>
                         <MudButton HtmlTag="label"
                                    Variant="Variant.Filled"
@@ -83,9 +91,22 @@
         <div class="d-flex align-center justify-space-around mt-5">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/reports"))">Back to reports</MudButton>
 
-            @if (ViewType.Equals("create"))
+            @if (Role != null && Report != null)
             {
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="ChangeValue">Save</MudButton>
+                @if (Report.Status != null && Role.Equals("Admin") && Report.Status.Equals("Under Review") && ViewType.Equals("detail"))
+                {
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" OnClick="@(() => ApproveReport.InvokeAsync("Approved"))">Approve</MudButton>
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => ApproveReport.InvokeAsync("Not Approved"))">Reject</MudButton>
+                }
+                @if(Report.Status != null && Role.Equals("User") && Report.Status.Equals("Approved") && ViewType.Equals("detail"))
+                {
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Create Event</MudButton>    
+                }
+                
+                @if (Role.Equals("User") && Report.Status == null && ViewType.Equals("create"))
+                {
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateReport">Create</MudButton>
+                }            
             }
         </div>
     </MudItem>        
@@ -107,13 +128,18 @@
     [Parameter]
     public EventCallback<Report> SaveReport { get; set; }
     
-    private async Task ChangeValue()
-    {
-        var tempDate = new[] {Date?.Year ?? 1999, Date?.Month ?? 1, Date?.Day ?? 1};
-        var tempTime = new[] {Time?.Hours ?? 1, Time?.Minutes ?? 1, Time?.Seconds ?? 1};
-        
-        await SaveReport.InvokeAsync(new Report(Report.Id, tempDate, tempTime, Report.Proof, Report.Description, Report.Status, new Location(Report.Location.Latitude, Report.Location.Longitude, Report.Location.Size)));  
-    }
+    [Parameter]
+    public EventCallback<string> ApproveReport { get; set; }
+    
+    
+    bool success;
+    string[] errors = { };
+    MudTextField<string> pwField;
+    MudForm form;
+    
+    public string? Role { get; set; }
+    public DateTime? Date { get; set; }
+    public TimeSpan? Time { get; set; }
 
     protected override void OnInitialized()
     {
@@ -124,13 +150,20 @@
         }
     }
 
-    bool success;
-    string[] errors = { };
-    MudTextField<string> pwField;
-    MudForm form;
-    
-    public DateTime? Date { get; set; }
-    public TimeSpan? Time { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        string token = await localStorage.GetItemAsync<string>("JWT");
+        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
+        Role = claims.First(claim => claim.Type.Equals("role")).Value;
+    }
+
+    private async Task CreateReport()
+    {
+        var tempDate = new[] {Date?.Year ?? 1999, Date?.Month ?? 1, Date?.Day ?? 1};
+        var tempTime = new[] {Time?.Hours ?? 1, Time?.Minutes ?? 1, Time?.Seconds ?? 1};
+        
+        await SaveReport.InvokeAsync(new Report(Report.Id, tempDate, tempTime, Report.Proof, Report.Description, Report.Status, Report.Location));  
+    }
     
     private async void UploadFile(IBrowserFile file)
     {

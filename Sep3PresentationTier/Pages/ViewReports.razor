@@ -1,118 +1,98 @@
 @page "/Reports"
 @using Services.Interfaces
 @using Model
-@using System.Net.Mime
 @using System.Security.Claims
-@using Model.DTOs
 @using Services.Implementations
 @inject IReportService ReportService
 @inject NavigationManager navManager;
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 <h2 style="text-align: center">Reports overview</h2>
 
+@if (role != null && role.Equals("User"))
+{
+    <MudContainer Class="d-flex align-center justify-space-between m-0">
+        <MudForm Class="d-flex align-center">
+            <MudRadioGroup @bind-SelectedOption="@SelectedOption">
+                <MudRadio Option="@("Approved")" Color="Color.Primary">Approved</MudRadio>
+                <MudRadio Option="@("Submitted by me")" Color="Color.Secondary">Submitted by me</MudRadio>
+            </MudRadioGroup>
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())"></MudButton>
+        </MudForm>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
+    </MudContainer>
+}
+
 @if (loading)
 {
-    <div>Loading reports...</div>        
+    <MudText Align="Align.Center" Color="Color.Default">Loading...</MudText>
 }
-
-@if (!isAdmin)
+else
 {
-    <MudButton Variant="Variant.Filled" IconClass="@Icons.Material.Filled.PlusOne" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
-    <MudForm>
-        <MudRadioGroup @bind-SelectedOption="@SelectedOption">
-            <MudRadio Option="@("Approved")" Color="Color.Primary">Approved</MudRadio>
-            <MudRadio Option="@("Submitted by me")" Color="Color.Secondary">Submitted by me</MudRadio>
-        </MudRadioGroup>
-    </MudForm>
-    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())"></MudButton>
+    <MudGrid Class="report-list">
+        @foreach (var report in reports)
+        {
+            <MudItem xs="12" sm="8" md="4">
+                <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
+                    <MudCardContent>
+                        <MudText Typo="Typo.body1"> Latitude: @report.Location.latitude</MudText>
+                        <MudText Typo="Typo.body1">Longtitude: @report.Location.longitude</MudText>
+                        <MudText Typo="Typo.body1">Size: @report.Location.size </MudText>
+                        <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
+                        <br>
+                        <MudText Typo="Typo.body2">
+                            Date: @report.Date[0].ToString("0000")-@report.Date[1].ToString("00")-@report.Date[2].ToString("00")
+                        </MudText>
+                        <MudText Typo="Typo.body2">
+                            Time: @report.Time[0].ToString("00"):@report.Time[1].ToString("00"):@report.Time[2].ToString("00")
+                        </MudText>
+                        <MudText Typo="Typo.body2"> Status @report.Status</MudText>
+                        <br>
+                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" OnClick='() => navManager.NavigateTo("/reports/detail/" + report.Id)'>Details</MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+
+        <div>@msg</div>
+    </MudGrid>
 }
-
-
-
-<MudGrid Class="report-list">
-
-    @foreach (var report in reports)
-    {
-        string imageSrc = Convert.ToBase64String(report.Proof);
-        string imageDataURL = $"data:image/jpeg;base64, {imageSrc}";
-     
-        <MudItem xs="6">
-            <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
-                <MudImage Src=@imageDataURL Alt="Image not found" Fluid="true" ObjectFit="ObjectFit.Contain"></MudImage>
-            </MudCard>
-            <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
-                <MudCardContent>
-                    <MudText Typo="Typo.body1"> Latitude: @report.Location.Latitude</MudText>
-                    <MudText Typo="Typo.body1">Longtitude: @report.Location.Longitude</MudText>
-                    <MudText Typo="Typo.body1">Size: @report.Location.Size </MudText>
-                    <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
-                    <br>
-                    <MudText Typo="Typo.body2">
-                        Date: @report.Date[0].ToString("0000")-@report.Date[1].ToString("00")-@report.Date[2].ToString("00")
-                    </MudText>
-                    <MudText Typo="Typo.body2">
-                        Time: @report.Time[0].ToString("00"):@report.Time[1].ToString("00"):@report.Time[2].ToString("00")
-                    </MudText>
-                    <MudText Typo="Typo.body2"> Status @report.Status</MudText>
-                    <br>
-                    
-                    @if (isAdmin)
-                    {
-                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" OnClick="@(() => update(report.Id, "Approved"))">Approve</MudButton>
-                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => update(report.Id, "Not Approved"))">Reject</MudButton>
-                    }
-                    else
-                    {
-                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Create Event</MudButton>    
-                    }
-                    
-
-                </MudCardContent>
-            </MudCard>
-        </MudItem>
-    }
-
-    <div>@msg</div>
-</MudGrid>
 
 @code {
     private bool loading = false;
     private string msg = "";
     private ICollection<Report> reports = new List<Report>();
     public string SelectedOption { get; set; }
+    public string? role { get; set; }
 
-    //Set to true, so that the new report button doesn't show on load. When the website connects to the logic tier,
-    //the role is updated, so it should not be a security vulnerability, no functionality
-    //is accessible before this point
-    private bool isAdmin = true;
-    
     protected override async Task OnInitializedAsync()
     {
         SelectedOption = "Approved";
         string token = await localStorage.GetItemAsync<string>("JWT");
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
-        isAdmin = claims.First(claim => claim.Type.Equals("role")).Value.Equals("Admin");
+        role = claims.First(claim => claim.Type.Equals("role")).Value;
+
+        if (role.Equals("Admin"))
+        {
+            SelectedOption = "Not Approved";
+            await loadData();
+        }
     }
 
     private async Task loadData()
     {
-        loading = true;
         try
         {
-            reports = await ReportService.GetAsync(SelectedOption.Equals("Approved"));
+            loading = true;
+            reports = await ReportService.GetReportsAsync(SelectedOption.Equals("Approved"));
         }
         catch (Exception ex)
         {
             msg = ex.Message;
         }
-        loading = false;
-    }
+        finally
+        {
+            loading = false;
+        }
 
-    private async Task update(string reportId, string status)
-    {
-        bool successful = await ReportService.ApproveAsync(reportId, status);
-        if (!successful)
-            msg = "Update failed";
-        navManager.NavigateTo("/reports/", true);
     }
 }
