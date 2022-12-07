@@ -1,22 +1,25 @@
 @using Model
 @using Services.Implementations
 @using System.Security.Claims
+@using Geolocation.Blazor
+
 @inject NavigationManager navManager;
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IGeolocationService geolocationService
 
 <MudForm @ref="form" Class="page-content" @bind-isValid="success" @bind-Errors="errors">
     <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
             <MudItem xs="10" sm="5" Class="flex-1">
                 <MudPaper Class="pa-4 flex-1 card">
                     <MudText Align="Align.Center" Color="Color.Default">Location</MudText>
-
+                    <MudSelect Disabled="@ViewType.Equals("detail")" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
+                                            <MudSelectItem Value="@(1)">Small</MudSelectItem>
+                                            <MudSelectItem Value="@(2)">Medium</MudSelectItem>
+                                            <MudSelectItem Value="@(3)">Large</MudSelectItem>
+                                        </MudSelect>
                     <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.Latitude"/>
                     <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Longitude"/>
-                    <MudSelect Disabled="@ViewType.Equals("detail")" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
-                        <MudSelectItem Value="@(1)">Small</MudSelectItem>
-                        <MudSelectItem Value="@(2)">Medium</MudSelectItem>
-                        <MudSelectItem Value="@(3)">Large</MudSelectItem>
-                    </MudSelect>
+                    <MudButton Disabled="@ViewType.Equals("detail")" Class="mt-2" StartIcon="@locationButtonIcon" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async() => await GetLocation())">@locationButtonText</MudButton>
                 </MudPaper>
             </MudItem>
         
@@ -136,7 +139,10 @@
     string[] errors = { };
     MudTextField<string> pwField;
     MudForm form;
-    
+
+    string locationButtonIcon = Icons.Filled.MyLocation;
+    string locationButtonText = "Get Current Location";
+
     public string? Role { get; set; }
     public DateTime? Date { get; set; }
     public TimeSpan? Time { get; set; }
@@ -163,6 +169,18 @@
         var tempTime = new[] {Time?.Hours ?? 1, Time?.Minutes ?? 1, Time?.Seconds ?? 1};
         
         await SaveReport.InvokeAsync(new Report(Report.Id, tempDate, tempTime, Report.Proof, Report.Description, Report.Status, Report.Location));  
+    }
+    
+    private async Task GetLocation()
+    {
+        locationButtonIcon = Icons.Filled.Cached;
+        locationButtonText = "Loading Location";
+        
+        GeolocationPosition location = await geolocationService.GetCurrentPositionAsync(new PositionOptions { EnableHighAccuracy = true });
+        Report.Location = new Location(location.Coords.Latitude, location.Coords.Longitude, Report.Location.Size);
+        
+        locationButtonIcon = Icons.Filled.MyLocation;
+        locationButtonText = "Get Current Location";
     }
     
     private async void UploadFile(IBrowserFile file)

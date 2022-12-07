@@ -8,13 +8,13 @@ public class CreateReportDto
     public string description { get; set; }
     public string status { get; set; }
     
-    public Location location { get; set; }
+    public LocationDto location { get; set; }
 
     public CreateReportDto()
     {
     }
 
-    public CreateReportDto(int[] date, int[] time, byte[]? proof, string description, string status, Location location)
+    public CreateReportDto(int[] date, int[] time, byte[]? proof, string description, string status, LocationDto location)
     {
         this.date = date;
         this.time = time;
