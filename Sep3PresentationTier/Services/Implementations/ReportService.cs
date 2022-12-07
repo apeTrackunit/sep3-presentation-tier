@@ -58,7 +58,7 @@ public class ReportService : IReportService
             date = report.Date,
             time = report.Time,
             description = report.Description,
-            location = report.Location,
+            location = new LocationDto(report.Location),
             proof = report.Proof,
             status = report.Status
         };

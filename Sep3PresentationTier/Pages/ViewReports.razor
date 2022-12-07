@@ -16,7 +16,7 @@
                 <MudRadio Option="@("Approved")" Color="Color.Primary">Approved</MudRadio>
                 <MudRadio Option="@("Submitted by me")" Color="Color.Secondary">Submitted by me</MudRadio>
             </MudRadioGroup>
-            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())"></MudButton>
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())">Search</MudButton>
         </MudForm>
         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton>
     </MudContainer>
@@ -28,34 +28,41 @@
 }
 else
 {
-    <MudGrid Class="report-list">
-        @foreach (var report in reports)
-        {
-            <MudItem xs="12" sm="8" md="4">
-                <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
-                    <MudCardContent>
-                        <MudText Typo="Typo.body1"> Latitude: @report.Location.latitude</MudText>
-                        <MudText Typo="Typo.body1">Longtitude: @report.Location.longitude</MudText>
-                        <MudText Typo="Typo.body1">Size: @report.Location.size </MudText>
-                        <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
-                        <br>
-                        <MudText Typo="Typo.body2">
-                            Date: @report.Date[0].ToString("0000")-@report.Date[1].ToString("00")-@report.Date[2].ToString("00")
-                        </MudText>
-                        <MudText Typo="Typo.body2">
-                            Time: @report.Time[0].ToString("00"):@report.Time[1].ToString("00"):@report.Time[2].ToString("00")
-                        </MudText>
-                        <MudText Typo="Typo.body2"> Status @report.Status</MudText>
-                        <br>
-                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" OnClick='() => navManager.NavigateTo("/reports/detail/" + report.Id)'>Details</MudButton>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }
-
-        <div>@msg</div>
-    </MudGrid>
+    @if (reports == null || reports.Count == 0)
+    {
+        <MudText Align="Align.Center" Color="Color.Default">No data</MudText>
+        <MudText Align="Align.Center" Color="Color.Default">@msg</MudText>
+    }
+    else
+    {
+        <MudGrid Class="report-list">
+            @foreach (var report in reports)
+            {
+                <MudItem xs="12" sm="8" md="4">
+                    <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1"> Latitude: @report.Location.Latitude</MudText>
+                            <MudText Typo="Typo.body1">Longtitude: @report.Location.Longitude</MudText>
+                            <MudText Typo="Typo.body1">Size: @report.Location.Size </MudText>
+                            <MudText Typo="Typo.body1"> Description: @report.Description</MudText>
+                            <br>
+                            <MudText Typo="Typo.body2">
+                                Date: @report.Date[0].ToString("0000")-@report.Date[1].ToString("00")-@report.Date[2].ToString("00")
+                            </MudText>
+                            <MudText Typo="Typo.body2">
+                                Time: @report.Time[0].ToString("00"):@report.Time[1].ToString("00"):@report.Time[2].ToString("00")
+                            </MudText>
+                            <MudText Typo="Typo.body2"> Status @report.Status</MudText>
+                            <br>
+                            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" OnClick='() => navManager.NavigateTo("/reports/detail/" + report.Id)'>Details</MudButton>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
 }
+
 
 @code {
     private bool loading = false;
@@ -71,11 +78,7 @@ else
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         role = claims.First(claim => claim.Type.Equals("role")).Value;
 
-        if (role.Equals("Admin"))
-        {
-            SelectedOption = "Not Approved";
-            await loadData();
-        }
+        await loadData();
     }
 
     private async Task loadData()
