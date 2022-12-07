@@ -10,9 +10,9 @@
                 <MudPaper Class="pa-4 flex-1 card">
                     <MudText Align="Align.Center" Color="Color.Default">Location</MudText>
 
-                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.latitude"/>
-                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.longitude"/>
-                    <MudSelect Disabled="@ViewType.Equals("detail")" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.size" AnchorOrigin="Origin.BottomCenter">
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.Latitude"/>
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Longitude"/>
+                    <MudSelect Disabled="@ViewType.Equals("detail")" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
                         <MudSelectItem Value="@(1)">Small</MudSelectItem>
                         <MudSelectItem Value="@(2)">Medium</MudSelectItem>
                         <MudSelectItem Value="@(3)">Large</MudSelectItem>
