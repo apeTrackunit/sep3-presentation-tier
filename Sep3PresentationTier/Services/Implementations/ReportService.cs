@@ -33,6 +33,22 @@ public class ReportService : IReportService
         return reports;
     }
 
+    public async Task<Report> GetReportAsync(string id)
+    {
+        await tokenService.AttachToken(client);
+        
+        HttpResponseMessage response = await client.GetAsync($"/reports/{id}");
+        string result = await response.Content.ReadAsStringAsync();
+        
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(result);
+        
+        Report report = JsonSerializer.Deserialize<Report>(result,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true})!;
+        
+        return report;
+    }
+
     public async Task<bool> CreateAsync(Report report)
     {
         await tokenService.AttachToken(client);
