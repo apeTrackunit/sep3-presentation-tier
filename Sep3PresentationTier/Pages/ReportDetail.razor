@@ -63,7 +63,7 @@ else
         bool confirmation = await reportService.ApproveAsync(Report.Id, status);
         if (confirmation)
         {
-            navManager.NavigateTo(navManager.Uri, true);   
+            navManager.NavigateTo("/reports", true);   
         }
     }
 }

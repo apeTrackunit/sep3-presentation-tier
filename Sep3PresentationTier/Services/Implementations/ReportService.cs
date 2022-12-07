@@ -32,7 +32,7 @@ public class ReportService : IReportService
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true})!;
         return reports;
     }
-    
+
     public async Task<Report> GetReportAsync(string id)
     {
         await tokenService.AttachToken(client);
