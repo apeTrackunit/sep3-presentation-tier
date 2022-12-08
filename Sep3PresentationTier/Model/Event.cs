@@ -11,14 +11,14 @@ public class Event
     public string Status { get; set; }
     public byte[]? Validation { get; set; }
     public string OrganiserId { get; set; }
-    public string Organiser { get; set; }
+    public string Username { get; set; }
     public EventReportDto Report { get; set; }
 
     public Event()
     {
     }
 
-    public Event(string id, int[] date, int[] time, string description, string status, byte[]? validation, string organiserId, string organiser, EventReportDto report)
+    public Event(string id, int[] date, int[] time, string description, string status, byte[]? validation, string organiserId, string username, EventReportDto report)
     {
         Id = id;
         Date = date;
@@ -26,8 +26,8 @@ public class Event
         Description = description;
         Status = status;
         Validation = validation;
-        OrganiserId = organiser;
-        Organiser = organiser;
+        OrganiserId = organiserId;
+        Username = username;
         Report = report;
     }
 }

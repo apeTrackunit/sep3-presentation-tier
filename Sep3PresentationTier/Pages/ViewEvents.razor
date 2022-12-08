@@ -5,12 +5,26 @@
 @using Services.Interfaces
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject IEventService EventService
+@inject NavigationManager navMgr;
 <h2 style="text-align: center">Events overview</h2>
 
 @if (loading)
 {
-    <div>Loading events...</div>
+    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
 }
+@* for future feature (validation event probably)*@
+@* @if (!isAdmin) *@
+@* { *@
+@*     <MudButton Variant="Variant.Filled" IconClass="@Icons.Material.Filled.PlusOne" Color="Color.Default" OnClick="@(() => navManager.NavigateTo("/reports/new"))">New report</MudButton> *@
+@*     <MudForm> *@
+@*         <MudRadioGroup @bind-SelectedOption="@SelectedOption"> *@
+@*             <MudRadio Option="@("Approved")" Color="Color.Primary">Approved</MudRadio> *@
+@*             <MudRadio Option="@("Submitted by me")" Color="Color.Secondary">Submitted by me</MudRadio> *@
+@*         </MudRadioGroup> *@
+@*     </MudForm> *@
+@*     <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Search" OnClick="@(async () => await loadData())"></MudButton> *@
+@* } *@
+
 <MudGrid Class="report-list">
 
     @foreach (var eventObj in events)
@@ -18,38 +32,70 @@
         // string imageSrc = Convert.ToBase64String(eventObj.Report.Proof);
         // string imageDataURL = $"data:image/jpeg;base64, {imageSrc}";
 
-        <MudItem xs="6">
+        <MudItem lg="4" md="6" xs="12">
             @* <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8"> *@
             @*     <MudImage Src=@imageDataURL Alt="Image not found" Fluid="true" ObjectFit="ObjectFit.Contain"></MudImage> *@
             @* </MudCard> *@
-            <MudCard Class="d-flex align-items-bottom justify-center mud-width-full py-8">
-                <MudCardContent>
-                    <MudText Typo="Typo.body2">
-                        Date: @eventObj.Date[0].ToString("0000")-@eventObj.Date[1].ToString("00")-@eventObj.Date[2].ToString("00")
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.body1">
+                            <MudIcon Icon="@Icons.Filled.CalendarMonth" Size="Size.Small"></MudIcon>
+                            @eventObj.Date[0].ToString("0000")-@eventObj.Date[1].ToString("00")-@eventObj.Date[2].ToString("00")
+
+                        </MudText>
+                        <MudText>
+                            <MudIcon Icon="@Icons.Filled.AccessTime" Size="Size.Small"></MudIcon>
+                            @eventObj.Time[0].ToString("00"):@eventObj.Time[1].ToString("00"):@eventObj.Time[2].ToString("00")
+                        </MudText>
+                        <MudText Typo="Typo.body1">
+
+                        </MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIcon Icon="@Icons.Filled.Person"Size="Size.Small"></MudIcon>
+                        @eventObj.Username
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent Class="d-flex flex-column align-items-bottom justify-center mud-width-full py-8">
+                    <MudIcon Icon="@Icons.Filled.Info"></MudIcon>
+
+                    <MudText Typo="Typo.body1">
+                        @eventObj.Description
                     </MudText>
-                    <MudText Typo="Typo.body2">
-                        Time: @eventObj.Time[0].ToString("00"):@eventObj.Time[1].ToString("00"):@eventObj.Time[2].ToString("00")
-                    </MudText>
-                    <br>
-                    <MudText Typo="Typo.body1">Description: @eventObj.Description</MudText>
-                    <br>
+                    @if (eventObj.Report.Location.Size == 1)
+                    {
+                        <MudText Typo="Typo.body1">Size: Small</MudText>
+                    }
+                    @if (eventObj.Report.Location.Size == 2)
+                    {
+                        <MudText Typo="Typo.body1">Size: Medium</MudText>
+                    }
+                    @if (eventObj.Report.Location.Size == 3)
+                    {
+                        <MudText Typo="Typo.body1">Size: Large</MudText>
+                    }
+                    <br/>
+                    <MudIcon Icon="@Icons.Filled.LocationOn"></MudIcon>
                     <MudText Typo="Typo.body1">Latitude: @eventObj.Report.Location.Latitude</MudText>
                     <MudText Typo="Typo.body1">Longtitude: @eventObj.Report.Location.Longitude</MudText>
-                    <MudText Typo="Typo.body1">Size: @eventObj.Report.Location.Size </MudText>
 
-                    @* <MudText Typo="Typo.body2"> Status @report.Status</MudText> *@
-                    <br>
+
                     @*might be used later *@
                     @* @if (isAdmin) *@
                     @* { *@
+                    @* <MudText Typo="Typo.body2"> Status @report.Status</MudText> *@
                     @*     <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" OnClick="@(() => update(report.Id, "Approved"))">Approve</MudButton> *@
                     @*     <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => update(report.Id, "Not Approved"))">Reject</MudButton> *@
                     @* } *@
-                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">View Event</MudButton>
-                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Attend Event</MudButton>
+
 
 
                 </MudCardContent>
+                <MudCardActions Class="d-flex flex-row-reverse flex-grow-1 gap-4" Elevation="0">
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Info" Color="Color.Info">View Event</MudButton>
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Attend Event</MudButton>
+                </MudCardActions>
             </MudCard>
         </MudItem>
     }
@@ -61,11 +107,12 @@
     private bool loading = false;
     private string msg = "";
     private ICollection<Event> events = new List<Event>();
+    private IEnumerable<Claim> claims = new List<Claim>();
 
     protected override async Task OnInitializedAsync()
     {
         string token = await localStorage.GetItemAsync<string>("JWT");
-        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
+        claims = AuthService.CreateClaimsPrincipal(token).Claims;
         await LoadData();
     }
 
@@ -82,6 +129,19 @@
             msg = e.Message;
         }
         loading = false;
+    }
+
+    private void ViewEventDetails(string eventId)
+    {
+    // For future features
+        navMgr.NavigateTo($"/events/{eventId}");
+        throw new NotImplementedException();
+    }
+
+    private void AttendEvent(string eventObjId)
+    {
+    //For future features
+        throw new NotImplementedException();
     }
 
 }
