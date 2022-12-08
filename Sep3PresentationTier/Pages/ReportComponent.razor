@@ -100,7 +100,7 @@
                 }
                 @if(Report.Status != null && Role.Equals("User") && Report.Status.Equals("Approved") && ViewType.Equals("detail"))
                 {
-                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Create Event</MudButton>    
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success" OnClick="@(()=>navManager.NavigateTo("/CreateEvent"))">Create Event</MudButton>    
                 }
                 
                 @if (Role.Equals("User") && Report.Status == null && ViewType.Equals("create"))

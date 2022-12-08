@@ -1,0 +1,89 @@
+﻿@using MudBlazor
+@using MudBlazor.Extensions
+@using System.Globalization
+@using System.Security.Claims
+@using Model
+@using Services.Implementations
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+
+<MudCard>
+    <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
+      
+        <MudItem xs="10" sm="5" Class="flex-1">
+            <MudPaper Class="pa-4 flex-1 card">
+                <MudText Align="Align.Center" Color="Color.Default">Select the date and time of the event </MudText>
+                <MudDatePicker Label="EventDate" @bind-Date="@EventDate" Required="true"  RequiredError="Required!" @bind-Value="cleaningEvent.Date" />
+                <MudTimePicker Label="EventTime" @bind-Time="@EventTime" Required="true" RequiredError="Required!" @bind-Value="cleaningEvent.Time"/>
+            </MudPaper>
+        </MudItem>
+    </div>
+
+    <MudItem xs="10" sm="5" Class="flex-1" >
+        <MudPaper Class="pa-4 flex-1 card">
+            <MudText Align="Align.Center" Color="Color.Default">Image of the location </MudText>
+       
+            @if (cleaningEvent.ReportRef.Proof != null)
+            {
+                var base64 = Convert.ToBase64String(cleaningEvent.ReportRef.Proof);
+                var EventImage = String.Format("data:{0};base64,{1}", "image/jpg", base64);
+
+                <MudCardMedia>
+                    <MudImage Src="@EventImage" Style="width: 400px"></MudImage>
+                </MudCardMedia>
+            }
+            else
+            {
+                <div style="width: 400px; height: 400px; background-color: #6c757d;" Class="d-flex align-center justify-center"><MudText Align="Align.Center" Style="color: #ffffff">No image</MudText></div>
+            }
+        </MudPaper>
+    </MudItem>
+    
+    <MudItem>
+        <MudInputString Label="Description" @bind="cleaningEvent.Description" Style="width: 600px"></MudInputString>
+    </MudItem>
+</MudCard>
+
+<MudItem>
+    <MudButton @onClick="CreateEvent" Text="Create Event"> Create Event </MudButton>
+</MudItem>
+
+@code {
+
+    [Parameter]
+    public Event? cleaningEvent { get; set; } = new Event();
+    
+    
+    [Parameter]
+    public EventCallback<Event> SaveEvent { get; set; }
+
+    
+    public  DateTime? EventDate { get; set; }
+    public TimeSpan? EventTime { get; set; }
+    public string? Role { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (cleaningEvent?.Date != null || cleaningEvent?.Time != null)
+        {
+            EventDate = new DateTime(cleaningEvent.Date[0], cleaningEvent.Date[1], cleaningEvent.Date[2]);
+            EventTime = new TimeSpan(cleaningEvent.Time[0], cleaningEvent.Time[1], cleaningEvent.Time[2]);
+        }
+    }
+
+    private async Task CreateEvent()
+    {
+        var tempDate = new[] {EventDate?.Year ?? 1999, EventDate?.Month ?? 1, EventDate?.Day ?? 1};
+        var tempTime = new[] {EventTime?.Hours ?? 1, EventTime?.Minutes ?? 1, EventTime?.Seconds ?? 1};
+
+        
+        await SaveEvent.InvokeAsync(new Event(cleaningEvent.Id, tempDate, tempTime, cleaningEvent.Description, cleaningEvent.Status, null, null, cleaningEvent.ReportRef));
+    }
+   
+    protected override async Task OnInitializedAsync()
+    {
+        string token = await localStorage.GetItemAsync<string>("JWT");
+        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
+        Role = claims.First(claim => claim.Type.Equals("role")).Value;
+    }
+}
