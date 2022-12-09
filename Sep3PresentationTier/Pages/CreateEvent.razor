@@ -1,0 +1,72 @@
+﻿@page "/events/new/{reportId}"
+@using System.Globalization
+@using Model
+@using Services.Interfaces
+@inject NavigationManager navManager;
+@inject IEventService eventService;
+@inject IReportService reportService;
+
+<h2 style="text-align: center; margin-bottom: 20px">New event</h2>
+
+@if (loading)
+{
+    <MudText Align="Align.Center" Color="Color.Default">Loading</MudText>
+}
+else
+{
+    @if (Event.Report.Id != null)
+    {
+        <EventComponent @bind-CleaningEvent=Event SaveEvent="@SaveEvent"/>
+    }
+    else
+    {
+        <MudText Align="Align.Center" Color="Color.Default">No data</MudText>
+    }
+}
+
+@code {
+    public Event Event { get; set; }
+    
+    [Parameter]
+    public string ReportId { get; set; }
+    
+    public bool loading = false;
+
+    public CreateEvent()
+    {
+        Event = new Event();
+        Event.Report = new Report();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport(ReportId);
+    }
+
+    public async Task LoadReport(String id)
+    {
+        try
+        {
+            loading = true;
+            Event.Report = await reportService.GetReportAsync(id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    public async Task SaveEvent(Event createEvent)
+    {
+        bool confirmation = await eventService.CreateAsync(createEvent);
+        if (confirmation)
+        {
+            navManager.NavigateTo("/events");   
+        }
+    }
+}

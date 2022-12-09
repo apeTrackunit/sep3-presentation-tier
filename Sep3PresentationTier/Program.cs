@@ -22,6 +22,7 @@ builder.Services.AddScoped(sp => new HttpClient
 builder.Services.AddMudServices();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddTransient<IGeolocationService, GeolocationService>();
 builder.Services.AddMudServices();
