@@ -25,10 +25,10 @@ public class EventService:IEventService
 
         CreateEventDto createEventDto = new CreateEventDto
         {
-            Date = cleaningEvent.Date,
-            Time = cleaningEvent.Time,
-            Description = cleaningEvent.Description,
-            ReportId = cleaningEvent.ReportRef.Id
+            date = cleaningEvent.Date,
+            time = cleaningEvent.Time,
+            description = cleaningEvent.Description,
+            reportId = cleaningEvent.Report.Id
         };
 
         string eventAsJson = JsonSerializer.Serialize(createEventDto);

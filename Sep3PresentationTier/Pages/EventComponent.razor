@@ -5,30 +5,74 @@
 @using Model
 @using Services.Implementations
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager navManager
 
 <MudForm Class="page-content">
     <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
         <MudItem xs="10" sm="5" Class="flex-1">
             <MudPaper Class="pa-4 flex-1 card">
-                <MudText Align="Align.Center" Color="Color.Default">Select the date and time of the event </MudText>
-                <MudDatePicker Label="EventDate" @bind-Date="@EventDate" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Date"/>
-                <MudTimePicker Label="EventTime" @bind-Time="@EventTime" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Time"/>
+                <MudText Align="Align.Center" Color="Color.Default">Event Info</MudText>
+                <MudDatePicker Label="Event Date" @bind-Date="@EventDate" Required="true" RequiredError="Required!" />
+                <MudTimePicker Label="Event Time" @bind-Time="@EventTime" Required="true" RequiredError="Required!" />
+                
+                <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Description"></MudTextField>
+                
+                <MudText Align="Align.Center" Color="Color.Default">Image of the cleaned location</MudText>
+                @{
+                    if (CleaningEvent?.Validation != null)
+                    {
+                        var base64 = Convert.ToBase64String(CleaningEvent?.Validation);
+                        var imgSrc = String.Format("data:{0};base64,{1}", "image/jpg", base64);
+                        <img src="@imgSrc" style="width: 400px"/>
+                    }
+                    else
+                    {
+                        <div style="width: 400px; height: 400px; background-color: #6c757d;" Class="d-flex align-center justify-center">
+                            <MudText Align="Align.Center" Style="color: #ffffff">No image</MudText>
+                        </div>
+                    }
+                }
+                <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
+                    <ButtonTemplate>
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Filled.CloudUpload"
+                                   for="@context">
+                            Upload Files
+                        </MudButton>
+                    </ButtonTemplate>
+                    <SelectedTemplate >
+                        @if (context != null)
+                        {
+                            <MudText Align="Align.Center">@context.Name</MudText>
+                        }
+                    </SelectedTemplate>
+                </MudFileUpload>
+    
             </MudPaper>
         </MudItem>
 
-
         <MudItem xs="10" sm="5" Class="flex-1">
             <MudPaper Class="pa-4 flex-1 card">
-                <MudText Align="Align.Center" Color="Color.Default">Image of the location </MudText>
-
-                @if (CleaningEvent.ReportRef.Proof != null)
+                <MudText Align="Align.Center" Color="Color.Default">Report Info</MudText>
+                
+                <MudTextField Disabled="true" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.latitude"/>
+                <MudTextField Disabled="true" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.longitude"/>
+                <MudSelect Disabled="true" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.size" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem Value="@(1)">Small</MudSelectItem>
+                    <MudSelectItem Value="@(2)">Medium</MudSelectItem>
+                    <MudSelectItem Value="@(3)">Large</MudSelectItem>
+                </MudSelect>
+                
+                <MudTextField Disabled="true" T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Report.Description"></MudTextField>
+                
+                @if (CleaningEvent.Report.Proof != null)
                 {
-                    var base64 = Convert.ToBase64String(CleaningEvent.ReportRef.Proof);
-                    var EventImage = String.Format("data:{0};base64,{1}", "image/jpg", base64);
+                    var base64 = Convert.ToBase64String(CleaningEvent.Report.Proof);
+                    var reportImg = String.Format("data:{0};base64,{1}", "image/jpg", base64);
 
-                    <MudCardMedia>
-                        <MudImage Src="@EventImage" Style="width: 400px"></MudImage>
-                    </MudCardMedia>
+                    <img src="@reportImg" style="width: 400px"/>
                 }
                 else
                 {
@@ -38,20 +82,17 @@
                 }
             </MudPaper>
         </MudItem>
-
-
-        <MudItem>
-            <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Description"></MudTextField>
-        </MudItem>
-
-        <MudItem>
-            <MudButton OnClick="() => CreateEvent()" Text="Create Event"> Create Event </MudButton>
-        </MudItem>
     </div>
+    
+    <MudItem>
+        <div class="d-flex align-center justify-space-around mt-5">
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/events"))">Back to events</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
+        </div>
+    </MudItem>      
 </MudForm>
 
 @code {
-
     [Parameter]
     public Event? CleaningEvent { get; set; }
 
@@ -60,7 +101,6 @@
 
     [Parameter]
     public EventCallback<Event> SaveEvent { get; set; }
-
 
     public DateTime? EventDate { get; set; }
     public TimeSpan? EventTime { get; set; }
@@ -79,9 +119,10 @@
     {
         var tempDate = new[] { EventDate?.Year ?? 1999, EventDate?.Month ?? 1, EventDate?.Day ?? 1 };
         var tempTime = new[] { EventTime?.Hours ?? 1, EventTime?.Minutes ?? 1, EventTime?.Seconds ?? 1 };
-
-
-        await SaveEvent.InvokeAsync(new Event(CleaningEvent.Id, tempDate, tempTime, CleaningEvent.Description, CleaningEvent.Status, null, null, CleaningEvent.ReportRef));
+        CleaningEvent.Date = tempDate;
+        CleaningEvent.Time = tempTime;
+        
+        await SaveEvent.InvokeAsync(CleaningEvent);
     }
 
     protected override async Task OnInitializedAsync()
@@ -90,5 +131,16 @@
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         Role = claims.First(claim => claim.Type.Equals("role")).Value;
     }
+
+    private async void UploadFile(IBrowserFile file)
+    {
+        using (var ms = new MemoryStream())
+        {
+            await file.OpenReadStream(15*1000*1000).CopyToAsync(ms);
+            CleaningEvent.Validation = ms.ToArray();
+        }
+    }
+
+  
 
 }
