@@ -4,14 +4,10 @@
 
 @inject IReportService reportService;
 @inject NavigationManager navManager;
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
-
 
 <h2 style="text-align: center; margin-bottom: 20px">New report</h2>
 
 <ReportComponent @bind-ViewType=ViewType @bind-Report=Report SaveReport="@SaveReport"/>
-
-
 
 @code {
     private string ViewType = "create";
@@ -27,9 +23,9 @@
         Report.Status = null;
         Report.Date = new[] {Date.Year, Date.Month, Date.Day};
         Report.Time = new[] {Time.Hours, Time.Minutes, Time.Seconds};
-        Report.Location = new Location();
+        Report.Location = new Location(1);
     }
-    
+
     public async Task SaveReport(Report report)
     {
         report.Status = "Under Review";
