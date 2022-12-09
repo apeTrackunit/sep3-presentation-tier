@@ -1,7 +1,7 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Blazored.LocalStorage;
+using Geolocation.Blazor;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -24,6 +24,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddTransient<IGeolocationService, GeolocationService>();
 builder.Services.AddMudServices();
 
 builder.Services.AddBlazoredLocalStorage(config =>

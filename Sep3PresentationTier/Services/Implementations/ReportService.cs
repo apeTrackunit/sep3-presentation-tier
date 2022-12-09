@@ -18,11 +18,10 @@ public class ReportService : IReportService
         this.tokenService = tokenService;
     }
 
-    public async Task<ICollection<Report>> GetAsync(bool approved)
+    public async Task<ICollection<Report>> GetReportsAsync(bool approved)
     {
         await tokenService.AttachToken(client);
         
-
         HttpResponseMessage response = await client.GetAsync($"/reports?approved={approved}");
         string result = await response.Content.ReadAsStringAsync();
         
@@ -34,6 +33,22 @@ public class ReportService : IReportService
         return reports;
     }
 
+    public async Task<Report> GetReportAsync(string id)
+    {
+        await tokenService.AttachToken(client);
+        
+        HttpResponseMessage response = await client.GetAsync($"/reports/{id}");
+        string result = await response.Content.ReadAsStringAsync();
+        
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(result);
+        
+        Report report = JsonSerializer.Deserialize<Report>(result,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true})!;
+        
+        return report;
+    }
+
     public async Task<bool> CreateAsync(Report report)
     {
         await tokenService.AttachToken(client);
@@ -43,7 +58,7 @@ public class ReportService : IReportService
             date = report.Date,
             time = report.Time,
             description = report.Description,
-            location = report.Location,
+            location = new LocationDto(report.Location),
             proof = report.Proof,
             status = report.Status
         };

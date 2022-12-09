@@ -1,0 +1,69 @@
+@page "/reports/detail/{id}"
+@using Model
+@using Services.Interfaces
+
+@inject IReportService reportService;
+@inject NavigationManager navManager;
+
+
+<h2 style="text-align: center; margin-bottom: 20px">Report Detail</h2>
+
+@if (!loading)
+{
+    @if (Report == null)
+    {
+        <MudText Align="Align.Center" Color="Color.Default">No data</MudText>
+    }
+    else
+    {
+        <ReportComponent @bind-ViewType=ViewType @bind-Report=Report ApproveReport="@ApproveReport"/>
+    }
+}
+else
+{
+    <MudText Align="Align.Center" Color="Color.Default">Loading</MudText>
+}
+
+
+@code {
+    private string ViewType = "detail";
+    
+    [Parameter]
+    public string Id { get; set; }
+    
+    public Report Report { get; set; }
+
+    public bool loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport(Id);
+    }
+
+    public async Task LoadReport(String id)
+    {
+        try
+        {
+            loading = true;
+            Report = await reportService.GetReportAsync(id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    public async Task ApproveReport(string status)
+    {
+        bool confirmation = await reportService.ApproveAsync(Report.Id, status);
+        if (confirmation)
+        {
+            navManager.NavigateTo("/reports", true);   
+        }
+    }
+}

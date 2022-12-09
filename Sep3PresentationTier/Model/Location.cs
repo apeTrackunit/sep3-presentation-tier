@@ -6,19 +6,17 @@ public class Location
     public double Longitude { get; set; }
     public int Size { get; set; }
 
-    public Location(double latitude, double longitude, int size)
-    {
-        Latitude = latitude;
-        Longitude = longitude;
-        Size = size;
-    }
-
-    public Location(int size)
-    {
-        Size = size;
-    }
-
     public Location()
     {
+    }
+    public Location(int size)
+    {
+        this.Size = size;
+    }
+    public Location(double latitude, double longitude, int size)
+    {
+        this.Latitude = latitude;
+        this.Longitude = longitude;
+        this.Size = size;
     }
 }
