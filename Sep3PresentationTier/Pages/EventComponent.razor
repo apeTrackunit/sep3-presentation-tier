@@ -57,9 +57,9 @@
             <MudPaper Class="pa-4 flex-1 card">
                 <MudText Align="Align.Center" Color="Color.Default">Report Info</MudText>
                 
-                <MudTextField Disabled="true" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.latitude"/>
-                <MudTextField Disabled="true" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.longitude"/>
-                <MudSelect Disabled="true" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.size" AnchorOrigin="Origin.BottomCenter">
+                <MudTextField Disabled="true" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Latitude"/>
+                <MudTextField Disabled="true" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Longitude"/>
+                <MudSelect Disabled="true" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem Value="@(1)">Small</MudSelectItem>
                     <MudSelectItem Value="@(2)">Medium</MudSelectItem>
                     <MudSelectItem Value="@(3)">Large</MudSelectItem>
