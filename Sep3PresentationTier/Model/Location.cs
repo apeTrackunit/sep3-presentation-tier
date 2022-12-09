@@ -2,23 +2,21 @@ namespace Model;
 
 public class Location
 {
-    public double latitude { get; set; }
-    public double longitude { get; set; }
-    public int size { get; set; }
-
-    public Location(double latitude, double longitude, int size)
-    {
-        latitude = latitude;
-        longitude = longitude;
-        size = size;
-    }
-
-    public Location(int size)
-    {
-        size = size;
-    }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public int Size { get; set; }
 
     public Location()
     {
+    }
+    public Location(int size)
+    {
+        this.Size = size;
+    }
+    public Location(double latitude, double longitude, int size)
+    {
+        this.Latitude = latitude;
+        this.Longitude = longitude;
+        this.Size = size;
     }
 }
