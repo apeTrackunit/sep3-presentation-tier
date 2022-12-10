@@ -1,6 +1,7 @@
 using System.Text;
 using System.Security.Claims;
 using System.Text.Json;
+using Model;
 using Model.DTOs;
 using Sep3PresentationTier.Shared;
 using Services.Interfaces;
@@ -11,6 +12,7 @@ public class AuthService : IAuthService
 {
     private readonly HttpClient client;
     private readonly TokenService tokenService;
+
     public AuthService(HttpClient client, TokenService tokenService)
     {
         this.client = client;
@@ -60,6 +62,23 @@ public class AuthService : IAuthService
 
         string token = responseContent;
         return token;
+    }
+    
+    public async Task<User> GetMeAsync()
+    {
+        await tokenService.AttachToken(client);
+
+        HttpResponseMessage response = await client.GetAsync("http://localhost:8910/user");
+
+        string responseContent = await response.Content.ReadAsStringAsync();
+        
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(responseContent);
+
+        User user = JsonSerializer.Deserialize<User>(responseContent,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true})!;
+        
+        return user;
     }
     
     //JWT interaction
