@@ -33,6 +33,20 @@ public class AuthService : IAuthService
         return responseContent;
     }
     
+    public async Task AddAdminAsync(RegisterUserDto user)
+    {
+        await tokenService.AttachToken(client);
+        
+        string userAsJson = JsonSerializer.Serialize(user);
+        StringContent content = new(userAsJson, Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await client.PostAsync("http://localhost:8910/register/admin", content);
+
+        string responseContent = await response.Content.ReadAsStringAsync();
+        
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(responseContent);
+    }
+    
     public async Task<string> LoginAsync(LoginUserDto user)
     {
         string userAsJson = JsonSerializer.Serialize(user);
