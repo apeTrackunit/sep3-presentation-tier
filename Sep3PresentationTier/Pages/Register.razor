@@ -37,16 +37,9 @@
                               AdornmentIcon="@PasswordRepInputIcon" 
                               OnAdornmentClick="ShowPasswordRepClick" 
                               AdornmentAriaLabel="Show Password"/>
-                @*How do we register admin/user? Is it the same.
-                <div class="d-flex"> 
-                    <MudRadioGroup T="string" Required="true" RequiredError="Account type is required!">
-                        <MudRadio Option="@("User")">User</MudRadio> 
-                        <MudRadio Option="@("Administrator")">Administrator</MudRadio> 
-                    </MudRadioGroup> 
-                 </div> *@
                 <div class="d-flex align-center justify-space-around mt-5">
                     <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/login"))">Already have account?</MudButton>
-                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="CreateAsync">Register</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@RegisterIcon" Disabled="@(!success || loading)" Class="ml-auto" @onclick="CreateAsync">Register</MudButton>
                 </div>
             </MudForm>
             @if (!string.IsNullOrWhiteSpace(msg))
@@ -79,6 +72,8 @@
     string[] errors = { };
     MudTextField<string> pwField1;
     MudForm form;
+    bool loading;
+    string RegisterIcon;
     
     private string email = "";
     private string password = "";
@@ -154,6 +149,8 @@
         msg = "";
         try
         {
+            RegisterIcon = Icons.Filled.Cached;
+            loading = true;
             var token = await authService.RegisterAsync(new RegisterUserDto(name, email, password, "User"));
             
             await localStorage.SetItemAsync("JWT", token);
@@ -164,6 +161,11 @@
         {
             Console.WriteLine(e);
             msg = e.Message;
+        }
+        finally
+        {
+            RegisterIcon = "";
+            loading = false;
         }
     }
 
