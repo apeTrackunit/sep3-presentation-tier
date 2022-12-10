@@ -1,9 +1,0 @@
-@media only screen and (max-width: 600px) {
-    .FormGroup {
-        display: flex;
-        flex-direction: column;
-    }
-    .FormLabel {
-        margin-bottom: 0.5rem;
-    }
-}

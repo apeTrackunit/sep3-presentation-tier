@@ -1,4 +1,4 @@
-﻿@page "/events/new/{reportId}"
+﻿@page "/events/detail/{reportId}"
 @using System.Globalization
 @using Model
 @using Services.Interfaces
@@ -6,7 +6,7 @@
 @inject IEventService eventService;
 @inject IReportService reportService;
 
-<h2 style="text-align: center; margin-bottom: 20px">New event</h2>
+<h2 style="text-align: center; margin-bottom: 20px">Event Detail</h2>
 
 @if (loading)
 {
@@ -14,9 +14,9 @@
 }
 else
 {
-    @if (Event.Report.Id != null)
+    @if (Event != null)
     {
-        <EventComponent @bind-CleaningEvent=Event SaveEvent="@SaveEvent" ViewType="create"/>
+        <EventComponent @bind-CleaningEvent=Event ApproveEvent="@ApproveEvent" ViewType="detail"/>
     }
     else
     {
@@ -32,7 +32,7 @@ else
     
     public bool loading = false;
 
-    public CreateEvent()
+    public EventDetail()
     {
         Event = new Event();
         Event.Report = new Report();
@@ -40,15 +40,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadReport(ReportId);
+        await LoadEvent(ReportId);
     }
 
-    public async Task LoadReport(String id)
+    public async Task LoadEvent(String id)
     {
         try
         {
             loading = true;
-            Event.Report = await reportService.GetReportAsync(id);
+            Event = await eventService.GetEvent(id);
         }
         catch (Exception e)
         {
@@ -61,9 +61,9 @@ else
         }
     }
     
-    public async Task SaveEvent(Event createEvent)
+    public async Task ApproveEvent(bool approve)
     {
-        bool confirmation = await eventService.CreateAsync(createEvent);
+        bool confirmation = await eventService.ApproveEvent(Event.Id, approve);
         if (confirmation)
         {
             navManager.NavigateTo("/events");   
