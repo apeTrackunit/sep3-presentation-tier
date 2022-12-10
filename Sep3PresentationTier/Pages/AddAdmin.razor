@@ -1,18 +1,16 @@
-﻿@page "/Register"
+﻿@page "/add-admin"
 @using Services.Interfaces
 @using Model.DTOs
 @using System.ComponentModel.DataAnnotations
 @using System.Text.RegularExpressions
 
-@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject IAuthService authService;
-@inject NavigationManager navManager;
 
 <MudGrid Justify="Justify.Center" Class="align-center full-height">
     <MudItem xs="12" sm="7" Class="grid-items-center">
         <MudPaper Class="pa-4 auth-window-paper">
             <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
-                <MudText Align="Align.Center" GutterBottom="true" Color="Color.Dark" Class="title-font">Register</MudText>
+                <MudText Align="Align.Center" GutterBottom="true" Color="Color.Dark" Class="title-font">Register Admin</MudText>
                 
                 <MudTextField T="string" Label="Email" Required="true" RequiredError="Email is required!"
                               Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" @bind-Value="email"/>
@@ -37,16 +35,8 @@
                               AdornmentIcon="@PasswordRepInputIcon" 
                               OnAdornmentClick="ShowPasswordRepClick" 
                               AdornmentAriaLabel="Show Password"/>
-                @*How do we register admin/user? Is it the same.
-                <div class="d-flex"> 
-                    <MudRadioGroup T="string" Required="true" RequiredError="Account type is required!">
-                        <MudRadio Option="@("User")">User</MudRadio> 
-                        <MudRadio Option="@("Administrator")">Administrator</MudRadio> 
-                    </MudRadioGroup> 
-                 </div> *@
                 <div class="d-flex align-center justify-space-around mt-5">
-                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/login"))">Already have account?</MudButton>
-                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="CreateAsync">Register</MudButton>
+                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success || loading)" StartIcon="@RegisterIcon" Class="ml-auto" @onclick="CreateAsync">Register admin</MudButton>
                 </div>
             </MudForm>
             @if (!string.IsNullOrWhiteSpace(msg))
@@ -57,21 +47,6 @@
             }
         </MudPaper>
     </MudItem>
-    @* If you want additional error messages on the side.
-    @if (errors.Length > 0) *@
-    @* { *@
-    @*     <MudItem xs="12" sm="5"> *@
-    @*         <MudPaper Class="pa-4 mud-height-full"> *@
-    @* *@
-    @*             <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText> *@
-    @*             @foreach (var error in errors) *@
-    @*             { *@
-    @*                 <MudText Color="@Color.Error">@error</MudText> *@
-    @*             } *@
-    @* *@
-    @*         </MudPaper> *@
-    @*     </MudItem> *@
-    @* } *@
 </MudGrid>
 
 @code {
@@ -79,6 +54,9 @@
     string[] errors = { };
     MudTextField<string> pwField1;
     MudForm form;
+    bool loading;
+    string RegisterIcon;
+
     
     private string email = "";
     private string password = "";
@@ -154,16 +132,24 @@
         msg = "";
         try
         {
-            var token = await authService.RegisterAsync(new RegisterUserDto(name, email, password, "User"));
+            RegisterIcon = Icons.Filled.Cached;
+            loading = true;
+            await authService.AddAdminAsync(new RegisterUserDto(name, email, password, "Admin"));
             
-            await localStorage.SetItemAsync("JWT", token);
-
-            navManager.NavigateTo("/", forceLoad: true);
+            msg = "Successfully created new admin!";
+            email = "";
+            password = "";
+            name = "";
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             msg = e.Message;
+        }
+        finally
+        {
+            RegisterIcon = "";
+            loading = false;
         }
     }
 
