@@ -7,4 +7,5 @@ public interface IAuthService
 {
     Task<String> RegisterAsync(RegisterUserDto user);
     Task<String> LoginAsync(LoginUserDto user);
+    Task<User> GetMeAsync();
 }

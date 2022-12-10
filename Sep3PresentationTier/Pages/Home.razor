@@ -1,0 +1,45 @@
+@page "/home"
+@using Model
+@using Services.Implementations
+@using System.Security.Claims
+@using Services.Interfaces
+
+@inject IAuthService authService;
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<div class="d-flex align-content-center justify-center flex-column page-content">
+        @if (!loading)
+        {
+                <img src="planet-protection.png" alt="planet-protection-icon" style="width: 150px; height: 150px" class="mx-auto mb-5"/>        
+                <MudText Align="Align.Center" GutterBottom="true" Typo="Typo.h3" Color="Color.Dark" Class="title-font">Welcome @User.UserName!</MudText>
+                <MudText Align="Align.Center" GutterBottom="true" Typo="Typo.h6" Color="Color.Dark" Class="title-font">You are logged in as @role</MudText>       
+        } else
+        {
+                <MudText Align="Align.Center" GutterBottom="true" Typo="Typo.body1" Color="Color.Dark" Class="title-font">Loading...</MudText>
+        }
+</div>        
+
+
+@code {
+        User User;
+        string role;
+        IEnumerable<Claim> claims;
+        bool loading = true;
+
+        protected override async Task OnInitializedAsync()
+        {
+                string token = await localStorage.GetItemAsync<string>("JWT");
+                if (token == null)
+                        return;
+                claims = AuthService.CreateClaimsPrincipal(token).Claims;
+                role = claims.First(claim => claim.Type.Equals("role")).Value;
+                
+                await GetMe();
+        }
+
+        private async Task GetMe()
+        {
+                User = await authService.GetMeAsync();
+                loading = false;
+        }
+}
