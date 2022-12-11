@@ -89,11 +89,11 @@
         <div class="d-flex align-center justify-space-around mt-5">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/events"))">Back to events</MudButton>
             
-            @if (Role.Equals("User") && ViewType.Equals("create"))
+            @if (Role != null && Role.Equals("User") && ViewType.Equals("create"))
             {
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
             }
-            @if (Role.Equals("Admin") && ViewType.Equals("detail"))
+            @if (Role != null && Role.Equals("Admin") && ViewType.Equals("detail"))
             {
                 <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" OnClick="@(() => ApproveEvent.InvokeAsync(true))">Approve</MudButton>
                 <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => ApproveEvent.InvokeAsync(false))">Reject</MudButton>
