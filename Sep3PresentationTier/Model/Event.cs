@@ -1,4 +1,3 @@
-﻿
 namespace Model;
 
 public class Event
@@ -7,6 +6,7 @@ public class Event
     public int[] Date { get; set; }
     public int[] Time { get; set; }
     public string Description { get; set; }
+
     public byte[]? Validation { get; set; }
     public string Organiser { get; set; }
     public Report Report { get; set; }

@@ -1,4 +1,4 @@
-﻿namespace Services.Implementations;
+namespace Services.Implementations;
 
 using System.Text;
 using System.Text.Json;
@@ -18,6 +18,23 @@ public class EventService:IEventService
         this.tokenService = tokenService;
     }
 
+
+    public async Task<ICollection<Event>> GetAsync()
+    {
+        await tokenService.AttachToken(client);
+
+        HttpResponseMessage response = await client.GetAsync("/events");
+        string result = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(result);
+
+        ICollection<Event> events = JsonSerializer.Deserialize<ICollection<Event>>(result, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true
+        })!;
+        return events;
     
     public async Task<bool> CreateAsync(Event cleaningEvent)
     {
