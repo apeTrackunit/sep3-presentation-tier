@@ -75,6 +75,7 @@
                                    Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Filled.CloudUpload"
+                                   Disabled="@ViewType.Equals("detail")"
                                    for="@context">
                             Upload Files
                         </MudButton>
@@ -103,7 +104,7 @@
                 }
                 @if(Report.Status != null && Role.Equals("User") && Report.Status.Equals("Approved") && ViewType.Equals("detail"))
                 {
-                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success">Create Event</MudButton>    
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Success" OnClick="@(()=>navManager.NavigateTo("/events/new/" + Report.Id))">Create Event</MudButton>    
                 }
                 
                 @if (Role.Equals("User") && Report.Status == null && ViewType.Equals("create"))

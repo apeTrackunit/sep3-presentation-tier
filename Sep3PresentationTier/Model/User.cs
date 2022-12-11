@@ -1,20 +1,15 @@
-﻿namespace Model;
+namespace Model;
 
 public class User
 {
     public string Id { get; set; }
-    public string Username { get; set; }
     public string Email { get; set; }
+    public string UserName { get; set; }
 
-    public User()
-    {
-        
-    }
-    
-    public User(string id, string username, string email)
+    public User(string id, string email, string userName)
     {
         Id = id;
-        Username = username;
         Email = email;
+        UserName = userName;
     }
 }

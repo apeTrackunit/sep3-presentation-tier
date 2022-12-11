@@ -1,0 +1,70 @@
+﻿@page "/events/detail/{reportId}"
+@using Model
+@using Services.Interfaces
+@inject NavigationManager navManager;
+@inject IEventService eventService;
+
+<h2 style="text-align: center; margin-bottom: 20px">Event Detail</h2>
+
+@if (loading)
+{
+    <MudText Align="Align.Center" Color="Color.Default">Loading</MudText>
+}
+else
+{
+    @if (Event != null)
+    {
+        <EventComponent @bind-CleaningEvent=Event ApproveEvent="@ApproveEvent" ViewType="detail"/>
+    }
+    else
+    {
+        <MudText Align="Align.Center" Color="Color.Default">No data</MudText>
+    }
+}
+
+@code {
+    public Event Event { get; set; }
+    
+    [Parameter]
+    public string ReportId { get; set; }
+    
+    public bool loading = false;
+
+    public EventDetail()
+    {
+        Event = new Event();
+        Event.Report = new Report();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEvent(ReportId);
+    }
+
+    public async Task LoadEvent(String id)
+    {
+        try
+        {
+            loading = true;
+            Event = await eventService.GetEvent(id);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+    
+    public async Task ApproveEvent(bool approve)
+    {
+        bool confirmation = await eventService.ApproveEvent(Event.Id, approve);
+        if (confirmation)
+        {
+            navManager.NavigateTo("/events");   
+        }
+    }
+}
