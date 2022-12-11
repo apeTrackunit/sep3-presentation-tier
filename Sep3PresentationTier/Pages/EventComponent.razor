@@ -58,6 +58,10 @@
             <MudPaper Class="pa-4 flex-1 card">
                 <MudText Align="Align.Center" Color="Color.Default">Report Info</MudText>
                 
+                @if (CleaningEvent != null && CleaningEvent.Report.Location.Latitude > 0 && CleaningEvent.Report.Location.Longitude > 0)
+                {
+                    <iframe id="map" src=@mapUrl height="300" width="600"></iframe>
+                }
                 <MudTextField Disabled="true" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Latitude"/>
                 <MudTextField Disabled="true" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Longitude"/>
                 <MudSelect Disabled="true" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
@@ -93,7 +97,7 @@
             {
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
             }
-            @if (Role != null && Role.Equals("Admin") && ViewType.Equals("detail"))
+            @if (Role != null && Role.Equals("Admin") && ViewType.Equals("detail") && !CleaningEvent.Approved)
             {
                 <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" OnClick="@(() => ApproveEvent.InvokeAsync(true))">Approve</MudButton>
                 <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => ApproveEvent.InvokeAsync(false))">Reject</MudButton>
@@ -121,10 +125,11 @@
     public DateTime? EventDate { get; set; }
     public TimeSpan? EventTime { get; set; }
     public string? Role { get; set; }
-
+    public string? mapUrl;
 
     protected override void OnInitialized()
     {
+        SetMap();
         if (CleaningEvent?.Date != null || CleaningEvent?.Time != null)
         {
             EventDate = new DateTime(CleaningEvent.Date[0], CleaningEvent.Date[1], CleaningEvent.Date[2]);
@@ -147,6 +152,14 @@
         string token = await localStorage.GetItemAsync<string>("JWT");
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         Role = claims.First(claim => claim.Type.Equals("role")).Value;
+    }
+    
+    private void SetMap()
+    {
+        if (CleaningEvent != null && CleaningEvent.Report.Location.Latitude > 0 && CleaningEvent.Report.Location.Longitude > 0)
+        {
+            mapUrl = $"https://www.openstreetmap.org/export/embed.html?bbox={CleaningEvent.Report.Location.Longitude},{CleaningEvent.Report.Location.Latitude},{CleaningEvent.Report.Location.Longitude},{CleaningEvent.Report.Location.Latitude}&marker={CleaningEvent.Report.Location.Latitude},{CleaningEvent.Report.Location.Longitude}&layer=mapnik&zoom=13";
+        }
     }
 
     private async void UploadFile(IBrowserFile file)
