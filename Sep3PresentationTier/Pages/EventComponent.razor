@@ -12,44 +12,45 @@
         <MudItem xs="10" sm="5" Class="flex-1">
             <MudPaper Class="pa-4 flex-1 card">
                 <MudText Align="Align.Center" Color="Color.Default">Event Info</MudText>
-                <MudDatePicker Label="Event Date" @bind-Date="@EventDate" Required="true" RequiredError="Required!" />
-                <MudTimePicker Label="Event Time" @bind-Time="@EventTime" Required="true" RequiredError="Required!" />
+                <MudDatePicker Label="Event Date" disabled="@(!ViewType.Equals("create"))" @bind-Date="@EventDate" Required="true" RequiredError="Required!" />
+                <MudTimePicker Label="Event Time" disabled="@(!ViewType.Equals("create"))" @bind-Time="@EventTime" Required="true" RequiredError="Required!" />
                 
-                <MudTextField T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Description"></MudTextField>
+                <MudTextField T="string" Label="Description" disabled="@(!ViewType.Equals("create"))" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Description"></MudTextField>
                 
-                <MudText Align="Align.Center" Color="Color.Default">Image of the cleaned location</MudText>
-                @{
+                @if (!ViewType.Equals("create")){
+                    <MudText Align="Align.Center" Color="Color.Default">Image of the cleaned location</MudText>
                     if (CleaningEvent?.Validation != null)
                     {
                         var base64 = Convert.ToBase64String(CleaningEvent?.Validation);
                         var imgSrc = String.Format("data:{0};base64,{1}", "image/jpg", base64);
                         <img src="@imgSrc" style="width: 400px"/>
-                    }
+                    } 
                     else
                     {
                         <div style="width: 400px; height: 400px; background-color: #6c757d;" Class="d-flex align-center justify-center">
                             <MudText Align="Align.Center" Style="color: #ffffff">No image</MudText>
                         </div>
                     }
+                
+                
+                    <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
+                        <ButtonTemplate>
+                            <MudButton HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Filled.CloudUpload"
+                                       for="@context">
+                                Upload Files
+                            </MudButton>
+                        </ButtonTemplate>
+                        <SelectedTemplate >
+                            @if (context != null)
+                            {
+                                <MudText Align="Align.Center">@context.Name</MudText>
+                            }
+                        </SelectedTemplate>
+                    </MudFileUpload>
                 }
-                <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
-                    <ButtonTemplate>
-                        <MudButton HtmlTag="label"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Filled.CloudUpload"
-                                   for="@context">
-                            Upload Files
-                        </MudButton>
-                    </ButtonTemplate>
-                    <SelectedTemplate >
-                        @if (context != null)
-                        {
-                            <MudText Align="Align.Center">@context.Name</MudText>
-                        }
-                    </SelectedTemplate>
-                </MudFileUpload>
-    
             </MudPaper>
         </MudItem>
 
@@ -87,12 +88,24 @@
     <MudItem>
         <div class="d-flex align-center justify-space-around mt-5">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/events"))">Back to events</MudButton>
-            <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
+            
+            @if (Role != null && Role.Equals("User") && ViewType.Equals("create"))
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
+            }
+            @if (Role != null && Role.Equals("Admin") && ViewType.Equals("detail"))
+            {
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" OnClick="@(() => ApproveEvent.InvokeAsync(true))">Approve</MudButton>
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => ApproveEvent.InvokeAsync(false))">Reject</MudButton>
+            }
         </div>
     </MudItem>      
 </MudForm>
 
 @code {
+    [Parameter]  
+    public string ViewType { get; set; }
+    
     [Parameter]
     public Event? CleaningEvent { get; set; }
 
@@ -101,10 +114,14 @@
 
     [Parameter]
     public EventCallback<Event> SaveEvent { get; set; }
+    
+    [Parameter]
+    public EventCallback<bool> ApproveEvent { get; set; }
 
     public DateTime? EventDate { get; set; }
     public TimeSpan? EventTime { get; set; }
     public string? Role { get; set; }
+
 
     protected override void OnInitialized()
     {
@@ -114,7 +131,7 @@
             EventTime = new TimeSpan(CleaningEvent.Time[0], CleaningEvent.Time[1], CleaningEvent.Time[2]);
         }
     }
-
+    
     private async Task CreateEvent()
     {
         var tempDate = new[] { EventDate?.Year ?? 1999, EventDate?.Month ?? 1, EventDate?.Day ?? 1 };
