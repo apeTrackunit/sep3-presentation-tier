@@ -96,7 +96,7 @@ a, .btn-link {
     min-width: 450px;
 }
 
-.report-list {
+.report-list, .event-list {
     height: calc(100vh - 170px);
     margin-top: 24px !important;
     overflow-x: scroll;
