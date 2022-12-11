@@ -26,7 +26,7 @@
             </MudForm>
             <div class="d-flex align-center justify-space-around mt-5">
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/register"))">Don't have account?</MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" @onclick="LoginAsync">Login</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@LoginIcon" Disabled="@(!success || loading)" Class="ml-auto" @onclick="LoginAsync">Login</MudButton>
                 </div>
         </MudPaper>
     </MudItem>
@@ -37,6 +37,8 @@
     string[] errors = { };
     MudTextField<string> pwField;
     MudForm form;
+    bool loading;
+    string LoginIcon;
 
     private string email = "";
     private string password = "";
@@ -69,6 +71,8 @@
 
         try
         {
+            LoginIcon = Icons.Filled.Cached;
+            loading = true;
             var token = await authService.LoginAsync(new LoginUserDto(email, password));
             await localStorage.SetItemAsync("JWT", token);
 
@@ -78,6 +82,11 @@
         {
             Console.WriteLine(e);
             resultMsg = e.Message;
+        }
+        finally
+        {
+            LoginIcon = "";
+            loading = false;
         }
     }
 

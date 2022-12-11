@@ -25,10 +25,10 @@ public class EventService:IEventService
 
         CreateEventDto createEventDto = new CreateEventDto
         {
-            Date = cleaningEvent.Date,
-            Time = cleaningEvent.Time,
-            Description = cleaningEvent.Description,
-            ReportId = cleaningEvent.ReportRef.Id
+            date = cleaningEvent.Date,
+            time = cleaningEvent.Time,
+            description = cleaningEvent.Description,
+            reportId = cleaningEvent.Report.Id
         };
 
         string eventAsJson = JsonSerializer.Serialize(createEventDto);
@@ -44,5 +44,38 @@ public class EventService:IEventService
 
         return true;
 
+    }
+
+    public async Task<bool> ApproveEvent(string eventId, bool approved)
+    {
+        string updateReportAsJson = JsonSerializer.Serialize(approved);
+        
+        StringContent content = new(updateReportAsJson, Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await client.PatchAsync($"http://localhost:8910/events/{eventId}", content);
+
+        string responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new Exception(responseContent);
+        }
+
+        return true;
+    }
+
+    public async Task<Event> GetEvent(string id)
+    {
+        await tokenService.AttachToken(client);
+        
+        HttpResponseMessage response = await client.GetAsync($"/events/{id}");
+        string result = await response.Content.ReadAsStringAsync();
+        
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(result);
+        
+        Event ev = JsonSerializer.Deserialize<Event>(result,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true})!;
+        
+        return ev;
     }
 }
