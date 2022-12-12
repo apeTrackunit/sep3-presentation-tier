@@ -17,10 +17,15 @@
                                             <MudSelectItem Value="@(2)">Medium</MudSelectItem>
                                             <MudSelectItem Value="@(3)">Large</MudSelectItem>
                                         </MudSelect>
-                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.Latitude"/>
-                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Longitude"/>
-                    <MudButton Disabled="@ViewType.Equals("detail")" Class="mt-2" StartIcon="@locationButtonIcon" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async() => await GetLocation())">@locationButtonText</MudButton>
-                </MudPaper>
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="Report.Location.Latitude" TextChanged="@(() => SetMap())"/>
+                    <MudTextField Disabled="@ViewType.Equals("detail")" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="Report.Location.Longitude" TextChanged="@(() => SetMap())"/>
+                    <MudButton Disabled="@ViewType.Equals("detail")" Class="my-2" StartIcon="@locationButtonIcon" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(async() => await GetLocation())">@locationButtonText</MudButton>
+                
+                    @if (Report != null && Report.Location.Latitude > 0 && Report.Location.Longitude > 0)
+                    {
+                        <iframe id="map" src=@mapUrl height="300" width="600"></iframe>
+                    }
+                </MudPaper>    
             </MudItem>
         
         
@@ -140,6 +145,7 @@
     string[] errors = { };
     MudTextField<string> pwField;
     MudForm form;
+    string mapUrl;
 
     string locationButtonIcon = Icons.Filled.MyLocation;
     string locationButtonText = "Get Current Location";
@@ -179,9 +185,20 @@
         
         GeolocationPosition location = await geolocationService.GetCurrentPositionAsync(new PositionOptions { EnableHighAccuracy = true });
         Report.Location = new Location(location.Coords.Latitude, location.Coords.Longitude, Report.Location.Size);
+
+        SetMap();
         
         locationButtonIcon = Icons.Filled.MyLocation;
         locationButtonText = "Get Current Location";
+    }
+
+    private void SetMap()
+    {
+        if (Report != null && Report.Location.Latitude > 0 && Report.Location.Longitude > 0)
+        {
+            mapUrl = $"https://www.openstreetmap.org/export/embed.html?bbox={Report.Location.Longitude},{Report.Location.Latitude},{Report.Location.Longitude},{Report.Location.Latitude}&marker={Report.Location.Latitude},{Report.Location.Longitude}&layer=mapnik&zoom=13";
+        }
+
     }
     
     private async void UploadFile(IBrowserFile file)
