@@ -19,23 +19,24 @@ public class EventService:IEventService
     }
 
 
-    public async Task<ICollection<Event>> GetAsync()
+    public async Task<ICollection<EventDto>> GetAsync(string filter)
     {
         await tokenService.AttachToken(client);
 
-        HttpResponseMessage response = await client.GetAsync("/events");
+        HttpResponseMessage response = await client.GetAsync($"/events/?filter={filter}");
         string result = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
             throw new Exception(result);
 
-        ICollection<Event> events = JsonSerializer.Deserialize<ICollection<Event>>(result, new JsonSerializerOptions
+        ICollection<EventDto> events = JsonSerializer.Deserialize<ICollection<EventDto>>(result, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             WriteIndented = true
         })!;
         return events;
-    
+    }
+
     public async Task<bool> CreateAsync(Event cleaningEvent)
     {
         await tokenService.AttachToken(client);
