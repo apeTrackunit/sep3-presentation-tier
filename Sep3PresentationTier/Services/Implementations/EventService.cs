@@ -96,4 +96,21 @@ public class EventService:IEventService
         
         return ev;
     }
+
+    public async Task<bool> AttendEvent(string eventId)
+    {
+        await tokenService.AttachToken(client);
+
+        string eventIdAsJson = JsonSerializer.Serialize(eventId);
+        StringContent content = new StringContent(eventIdAsJson, Encoding.UTF8, "application/json");
+        
+        HttpResponseMessage response = await client.PostAsync($"/events/attend?eventId={eventId}", content);
+
+        string responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(responseContent);
+
+        return true;
+    }
 }

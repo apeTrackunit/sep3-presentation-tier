@@ -4,8 +4,11 @@
 @using System.Security.Claims
 @using Model
 @using Services.Implementations
+@using Services.Interfaces
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject NavigationManager navManager
+@inject IAuthService authService
+@inject IEventService eventService;
 
 <MudForm Class="page-content">
     <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
@@ -105,7 +108,10 @@
     <MudItem>
         <div class="d-flex align-center justify-space-around mt-5">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/events"))">Back to events</MudButton>
-
+            @if  (Role != null && Role.Equals("User") && !attending &&  ViewType.Equals("detail"))
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" DisableElevation="true" OnClick="@(() => AttendEvent())">Attend Event</MudButton>
+            }
             @if (Role != null && Role.Equals("User") && ViewType.Equals("create"))
             {
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
@@ -136,14 +142,13 @@
     [Parameter]
     public EventCallback<bool> ApproveEvent { get; set; }
 
-
     ICollection<User> Attendees { get; set; }
 
     public DateTime? EventDate { get; set; }
     public TimeSpan? EventTime { get; set; }
     public string? Role { get; set; }
     public string? mapUrl;
-
+    public bool attending = false;
     protected override void OnInitialized()
     {
         SetMap();
@@ -151,6 +156,16 @@
         {
             EventDate = new DateTime(CleaningEvent.Date[0], CleaningEvent.Date[1], CleaningEvent.Date[2]);
             EventTime = new TimeSpan(CleaningEvent.Time[0], CleaningEvent.Time[1], CleaningEvent.Time[2]);
+        }
+    }
+
+    private async Task CheckIfAttending()
+    {
+        var user = await authService.GetMeAsync();
+        foreach (var attendee in CleaningEvent.Attendees)
+        {
+            if (attendee.UserName.Equals(user.UserName))
+                attending = true;
         }
     }
 
@@ -169,6 +184,7 @@
         string token = await localStorage.GetItemAsync<string>("JWT");
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         Role = claims.First(claim => claim.Type.Equals("role")).Value;
+        await CheckIfAttending();
     }
 
     private void SetMap()
@@ -187,5 +203,14 @@
             CleaningEvent.Validation = ms.ToArray();
         }
     }
-    
+
+    private async void AttendEvent()
+    {
+        bool success = await eventService.AttendEvent(CleaningEvent.Id);
+        if (!success)
+            throw new Exception("Connection issues. Could not sign up as a participant!");
+        attending = true;
+        navManager.NavigateTo(navManager.Uri, forceLoad: true);
+    }
+
 }
