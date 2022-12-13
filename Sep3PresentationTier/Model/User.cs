@@ -12,4 +12,8 @@ public class User
         Email = email;
         UserName = userName;
     }
+
+    public User()
+    {
+    }
 }

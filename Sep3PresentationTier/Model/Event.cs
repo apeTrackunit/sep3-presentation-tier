@@ -11,10 +11,11 @@ public class Event
     public string Organiser { get; set; }
     public Report Report { get; set; }
     public bool Approved { get; set; }
+    public ICollection<User> Attendees { get; set; }
 
     public Event(){}
 
-    public Event(string id, int[] date, int[] time, string description, byte[]? validation, string organiser, Report report, bool approved)
+    public Event(string id, int[] date, int[] time, string description, byte[]? validation, string organiser, Report report, bool approved, ICollection<User> attendees)
     {
         Id = id;
         Date = date;
@@ -24,5 +25,6 @@ public class Event
         Organiser = organiser;
         Report = report;
         Approved = approved;
+        Attendees = attendees;
     }
 }
