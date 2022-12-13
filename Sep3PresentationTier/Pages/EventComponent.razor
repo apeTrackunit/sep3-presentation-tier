@@ -37,7 +37,7 @@
                     }
 
                     //Since Username is unique in the database, we can compare that
-                    @if (CleaningEvent?.Validation == null && user.UserName.Equals(CleaningEvent?.Organiser) && InThePast())
+                    @if (CleaningEvent?.Validation == null && user.Id.Equals(CleaningEvent?.Organiser) && InThePast())
                     {
                         <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
                             <ButtonTemplate>
@@ -195,6 +195,8 @@
         Role = claims.First(claim => claim.Type.Equals("role")).Value;
         await CheckIfAttending();
         user = await authService.GetMeAsync();
+
+        var a = CleaningEvent?.Validation;
     }
 
     private void SetMap()
