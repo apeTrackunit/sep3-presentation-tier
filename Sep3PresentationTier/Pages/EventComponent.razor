@@ -121,9 +121,6 @@
 
 @code {
 
-    [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; }
-
     [Parameter]
     public string ViewType { get; set; }
 
@@ -190,18 +187,5 @@
             CleaningEvent.Validation = ms.ToArray();
         }
     }
-
-    // private string searchString1 = "";
-    //
-    // private bool FilterFunc1(User user) => FilterFunc(user, searchString1);
-    //
-    // private bool FilterFunc(User user, string searchString)
-    // {
-    //     if (string.IsNullOrEmpty(searchString))
-    //         return true;
-    //     if (user.UserName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-    //         return true;
-    //
-    //     return false;
-    // }
+    
 }
