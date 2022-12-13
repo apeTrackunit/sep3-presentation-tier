@@ -20,12 +20,12 @@
                 
                 <MudTextField T="string" Label="Description" disabled="@(!ViewType.Equals("create"))" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Description"></MudTextField>
 
-                @if (!ViewType.Equals("create"))
+                @if (!ViewType.Equals("create") && InThePast())
                 {
                     <MudText Align="Align.Center" Color="Color.Default">Image of the cleaned location</MudText>
-                    if (CleaningEvent?.Validation != null)
+                    if (CleaningEvent != null && CleaningEvent?.Validation?.Length > 0)
                     {
-                        var base64 = Convert.ToBase64String(CleaningEvent?.Validation);
+                        var base64 = Convert.ToBase64String(CleaningEvent.Validation);
                         var imgSrc = String.Format("data:{0};base64,{1}", "image/jpg", base64);
                         <img src="@imgSrc" style="width: 400px"/>
                     }
@@ -37,7 +37,7 @@
                     }
 
                     //Since Username is unique in the database, we can compare that
-                    @if (CleaningEvent?.Validation == null && user.Id.Equals(CleaningEvent?.Organiser) && InThePast())
+                    @if (!hasValidationImageAfterLoad && user != null && user.Id.Equals(CleaningEvent?.Organiser.Id) && InThePast())
                     {
                         <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
                             <ButtonTemplate>
@@ -114,9 +114,13 @@
     <MudItem>
         <div class="d-flex align-center justify-space-around mt-5">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/events"))">Back to events</MudButton>
-            @if  (Role != null && Role.Equals("User") && !attending &&  ViewType.Equals("detail"))
+            @if  (Role != null && Role.Equals("User") && !attending && ViewType.Equals("detail") && !InThePast())
             {
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" DisableElevation="true" OnClick="@(() => AttendEvent())">Attend Event</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" DisableElevation="true" OnClick="@(async() => await AttendEvent())">Attend Event</MudButton>
+            }
+            @if  (Role != null && Role.Equals("User") && ViewType.Equals("detail") && user != null && user.Id.Equals(CleaningEvent?.Organiser.Id) && InThePast() && !hasValidationImageAfterLoad)
+            {
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" Disabled="@(CleaningEvent?.Validation?.Length == 0)" DisableElevation="true" OnClick="@(async() => await ValidateEvent())">Send Validation</MudButton>
             }
             @if (Role != null && Role.Equals("User") && ViewType.Equals("create"))
             {
@@ -155,8 +159,10 @@
     public string? Role { get; set; }
     public string? mapUrl;
     public bool attending = false;
+
+    bool hasValidationImageAfterLoad = false;
     
-    User user;
+    User? user;
 
     protected override void OnInitialized()
     {
@@ -166,12 +172,25 @@
             EventDate = new DateTime(CleaningEvent.Date[0], CleaningEvent.Date[1], CleaningEvent.Date[2]);
             EventTime = new TimeSpan(CleaningEvent.Time[0], CleaningEvent.Time[1], CleaningEvent.Time[2]);
         }
+
+        hasValidationImageAfterLoad = CleaningEvent?.Validation?.Length > 0;
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        string token = await localStorage.GetItemAsync<string>("JWT");
+        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
+        Role = claims.First(claim => claim.Type.Equals("role")).Value;
+        user = await authService.GetMeAsync();
+        if (ViewType != "create" && user != null)
+        {
+            await CheckIfAttending();
+        }
     }
 
     private async Task CheckIfAttending()
     {
-        var user = await authService.GetMeAsync();
-        foreach (var attendee in CleaningEvent.Attendees)
+        foreach (var attendee in CleaningEvent?.Attendees)
         {
             if (attendee.UserName.Equals(user.UserName))
                 attending = true;
@@ -188,17 +207,6 @@
         await SaveEvent.InvokeAsync(CleaningEvent);
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        string token = await localStorage.GetItemAsync<string>("JWT");
-        IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
-        Role = claims.First(claim => claim.Type.Equals("role")).Value;
-        await CheckIfAttending();
-        user = await authService.GetMeAsync();
-
-        var a = CleaningEvent?.Validation;
-    }
-
     private void SetMap()
     {
         if (CleaningEvent != null && CleaningEvent.Report.Location.Latitude > 0 && CleaningEvent.Report.Location.Longitude > 0)
@@ -207,7 +215,7 @@
         }
     }
 
-    private async void UploadFile(IBrowserFile file)
+    private async Task UploadFile(IBrowserFile file)
     {
         using (var ms = new MemoryStream())
         {
@@ -216,12 +224,20 @@
         }
     }
 
-    private async void AttendEvent()
+    private async Task AttendEvent()
     {
         bool success = await eventService.AttendEvent(CleaningEvent.Id);
         if (!success)
-            throw new Exception("Connection issues. Could not sign up as a participant!");
+            throw new Exception("Something went wrong. Could not sign up as a participant!");
         attending = true;
+        navManager.NavigateTo(navManager.Uri, forceLoad: true);
+    }
+
+    private async Task ValidateEvent()
+    {
+        bool success = await eventService.ValidateEvent(CleaningEvent.Id, CleaningEvent.Validation);
+        if (!success)
+            throw new Exception("Something went wrong. Could not upload validation!");
         navManager.NavigateTo(navManager.Uri, forceLoad: true);
     }
 

@@ -11,4 +11,5 @@ public interface IEventService
     Task<bool> ApproveEvent(string id, bool approved);
     Task<Event> GetEvent(string id);
     Task<bool> AttendEvent(string eventId);
+    Task<bool> ValidateEvent(string eventId, byte[] validation);
 }
