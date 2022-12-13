@@ -182,7 +182,7 @@
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         Role = claims.First(claim => claim.Type.Equals("role")).Value;
         user = await authService.GetMeAsync();
-        if (ViewType != "create" && user != null)
+        if (ViewType == "detail" && user != null)
         {
             await CheckIfAttending();
         }
