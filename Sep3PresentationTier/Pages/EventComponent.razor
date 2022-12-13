@@ -4,52 +4,58 @@
 @using System.Security.Claims
 @using Model
 @using Services.Implementations
+@using Services.Interfaces
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject NavigationManager navManager
+@inject IAuthService authService;
 
 <MudForm Class="page-content">
     <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
         <MudItem xs="10" sm="5" Class="flex-1">
             <MudPaper Class="pa-4 flex-1 card">
                 <MudText Align="Align.Center" Color="Color.Default">Event Info</MudText>
-                <MudDatePicker Label="Event Date" disabled="@(!ViewType.Equals("create"))" @bind-Date="@EventDate" Required="true" RequiredError="Required!" />
-                <MudTimePicker Label="Event Time" disabled="@(!ViewType.Equals("create"))" @bind-Time="@EventTime" Required="true" RequiredError="Required!" />
-                
+                <MudDatePicker Label="Event Date" disabled="@(!ViewType.Equals("create"))" @bind-Date="@EventDate" Required="true" RequiredError="Required!"/>
+                <MudTimePicker Label="Event Time" disabled="@(!ViewType.Equals("create"))" @bind-Time="@EventTime" Required="true" RequiredError="Required!"/>
+
                 <MudTextField T="string" Label="Description" disabled="@(!ViewType.Equals("create"))" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Description"></MudTextField>
-                
-                @if (!ViewType.Equals("create")){
+
+                @if (!ViewType.Equals("create"))
+                {
                     <MudText Align="Align.Center" Color="Color.Default">Image of the cleaned location</MudText>
                     if (CleaningEvent?.Validation != null)
                     {
                         var base64 = Convert.ToBase64String(CleaningEvent?.Validation);
                         var imgSrc = String.Format("data:{0};base64,{1}", "image/jpg", base64);
                         <img src="@imgSrc" style="width: 400px"/>
-                    } 
+                    }
                     else
                     {
                         <div style="width: 400px; height: 400px; background-color: #6c757d;" Class="d-flex align-center justify-center">
                             <MudText Align="Align.Center" Style="color: #ffffff">No image</MudText>
                         </div>
                     }
-                
-                
-                    <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
-                        <ButtonTemplate>
-                            <MudButton HtmlTag="label"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Filled.CloudUpload"
-                                       for="@context">
-                                Upload Files
-                            </MudButton>
-                        </ButtonTemplate>
-                        <SelectedTemplate >
-                            @if (context != null)
-                            {
-                                <MudText Align="Align.Center">@context.Name</MudText>
-                            }
-                        </SelectedTemplate>
-                    </MudFileUpload>
+
+                    //Since Username is unique in the database, we can compare that
+                    @if (CleaningEvent?.Validation == null && user.UserName.Equals(CleaningEvent?.Organiser) && InThePast())
+                    {
+                        <MudFileUpload Class="d-flex align-center justify-center" T="IBrowserFile" Accept=".jpg" Required="true" RequiredError="Required!" FilesChanged="UploadFile">
+                            <ButtonTemplate>
+                                <MudButton HtmlTag="label"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Filled.CloudUpload"
+                                           for="@context">
+                                    Upload Files
+                                </MudButton>
+                            </ButtonTemplate>
+                            <SelectedTemplate >
+                                @if (context != null)
+                                {
+                                    <MudText Align="Align.Center">@context.Name</MudText>
+                                }
+                            </SelectedTemplate>
+                        </MudFileUpload>
+                    }
                 }
             </MudPaper>
         </MudItem>
@@ -57,21 +63,21 @@
         <MudItem xs="10" sm="5" Class="flex-1">
             <MudPaper Class="pa-4 flex-1 card">
                 <MudText Align="Align.Center" Color="Color.Default">Report Info</MudText>
-                
+
                 @if (CleaningEvent != null && CleaningEvent.Report.Location.Latitude > 0 && CleaningEvent.Report.Location.Longitude > 0)
                 {
                     <iframe id="map" src=@mapUrl height="300" width="600"></iframe>
                 }
-                <MudTextField Disabled="true" T="double" Label="Latitude"  Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Latitude"/>
+                <MudTextField Disabled="true" T="double" Label="Latitude" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Latitude"/>
                 <MudTextField Disabled="true" T="double" Label="Longitude" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Longitude"/>
                 <MudSelect Disabled="true" T="int" Label="Size" Required="true" RequiredError="Required!" @bind-Value="CleaningEvent.Report.Location.Size" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem Value="@(1)">Small</MudSelectItem>
                     <MudSelectItem Value="@(2)">Medium</MudSelectItem>
                     <MudSelectItem Value="@(3)">Large</MudSelectItem>
                 </MudSelect>
-                
+
                 <MudTextField Disabled="true" T="string" Label="Description" Required="true" RequiredError="Required!" Lines="4" @bind-Value="CleaningEvent.Report.Description"></MudTextField>
-                
+
                 @if (CleaningEvent.Report.Proof != null)
                 {
                     var base64 = Convert.ToBase64String(CleaningEvent.Report.Proof);
@@ -88,11 +94,11 @@
             </MudPaper>
         </MudItem>
     </div>
-    
+
     <MudItem>
         <div class="d-flex align-center justify-space-around mt-5">
             <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Transparent" DisableElevation="true" OnClick="@(() => navManager.NavigateTo("/events"))">Back to events</MudButton>
-            
+
             @if (Role != null && Role.Equals("User") && ViewType.Equals("create"))
             {
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" @onclick="CreateEvent">Create Event</MudButton>
@@ -103,13 +109,14 @@
                 <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ThumbDown" Color="Color.Error" OnClick="@(() => ApproveEvent.InvokeAsync(false))">Reject</MudButton>
             }
         </div>
-    </MudItem>      
+    </MudItem>
 </MudForm>
 
 @code {
-    [Parameter]  
+
+    [Parameter]
     public string ViewType { get; set; }
-    
+
     [Parameter]
     public Event? CleaningEvent { get; set; }
 
@@ -118,7 +125,7 @@
 
     [Parameter]
     public EventCallback<Event> SaveEvent { get; set; }
-    
+
     [Parameter]
     public EventCallback<bool> ApproveEvent { get; set; }
 
@@ -126,6 +133,8 @@
     public TimeSpan? EventTime { get; set; }
     public string? Role { get; set; }
     public string? mapUrl;
+
+    User user;
 
     protected override void OnInitialized()
     {
@@ -136,14 +145,14 @@
             EventTime = new TimeSpan(CleaningEvent.Time[0], CleaningEvent.Time[1], CleaningEvent.Time[2]);
         }
     }
-    
+
     private async Task CreateEvent()
     {
         var tempDate = new[] { EventDate?.Year ?? 1999, EventDate?.Month ?? 1, EventDate?.Day ?? 1 };
         var tempTime = new[] { EventTime?.Hours ?? 1, EventTime?.Minutes ?? 1, EventTime?.Seconds ?? 1 };
         CleaningEvent.Date = tempDate;
         CleaningEvent.Time = tempTime;
-        
+
         await SaveEvent.InvokeAsync(CleaningEvent);
     }
 
@@ -152,8 +161,9 @@
         string token = await localStorage.GetItemAsync<string>("JWT");
         IEnumerable<Claim> claims = AuthService.CreateClaimsPrincipal(token).Claims;
         Role = claims.First(claim => claim.Type.Equals("role")).Value;
+        user = await authService.GetMeAsync();
     }
-    
+
     private void SetMap()
     {
         if (CleaningEvent != null && CleaningEvent.Report.Location.Latitude > 0 && CleaningEvent.Report.Location.Longitude > 0)
@@ -166,11 +176,21 @@
     {
         using (var ms = new MemoryStream())
         {
-            await file.OpenReadStream(15*1000*1000).CopyToAsync(ms);
+            await file.OpenReadStream(15 * 1000 * 1000).CopyToAsync(ms);
             CleaningEvent.Validation = ms.ToArray();
         }
     }
 
-  
+    private bool InThePast()
+    {
+        DateOnly date = new DateOnly(CleaningEvent.Date[0], CleaningEvent.Date[1], CleaningEvent.Date[2]);
+        TimeOnly time = new TimeOnly(CleaningEvent.Time[0], CleaningEvent.Time[1], CleaningEvent.Time[2]);
+        DateTime now = DateTime.Now;
 
+        if (date < DateOnly.FromDateTime(now))
+            return true;
+        if (date == DateOnly.FromDateTime(now) && time < TimeOnly.FromDateTime(now))
+            return true;
+        return false;
+    }
 }
