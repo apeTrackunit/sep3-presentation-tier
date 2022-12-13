@@ -19,7 +19,7 @@ public class EventService:IEventService
     }
 
 
-    public async Task<ICollection<EventDto>> GetAsync(string filter)
+    public async Task<ICollection<EventOverviewDto>> GetAsync(string filter)
     {
         await tokenService.AttachToken(client);
 
@@ -29,7 +29,7 @@ public class EventService:IEventService
         if (!response.IsSuccessStatusCode)
             throw new Exception(result);
 
-        ICollection<EventDto> events = JsonSerializer.Deserialize<ICollection<EventDto>>(result, new JsonSerializerOptions
+        ICollection<EventOverviewDto> events = JsonSerializer.Deserialize<ICollection<EventOverviewDto>>(result, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             WriteIndented = true
@@ -69,7 +69,7 @@ public class EventService:IEventService
         string updateReportAsJson = JsonSerializer.Serialize(approved);
         
         StringContent content = new(updateReportAsJson, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PatchAsync($"http://localhost:8910/events/{eventId}", content);
+        HttpResponseMessage response = await client.PatchAsync($"http://localhost:8910/events/approve?id={eventId}", content);
 
         string responseContent = await response.Content.ReadAsStringAsync();
 
@@ -105,6 +105,25 @@ public class EventService:IEventService
         StringContent content = new StringContent(eventIdAsJson, Encoding.UTF8, "application/json");
         
         HttpResponseMessage response = await client.PostAsync($"/events/attend?eventId={eventId}", content);
+
+        string responseContent = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception(responseContent);
+
+        return true;
+    }
+
+    public async Task<bool> ValidateEvent(string eventId, byte[] validation)
+    {
+        await tokenService.AttachToken(client);
+
+        ValidateEventDto body = new ValidateEventDto(validation);
+
+        string eventIdAsJson = JsonSerializer.Serialize(body);
+        StringContent content = new StringContent(eventIdAsJson, Encoding.UTF8, "application/json");
+
+        HttpResponseMessage response = await client.PatchAsync($"/events/validate?eventId={eventId}", content);
 
         string responseContent = await response.Content.ReadAsStringAsync();
 

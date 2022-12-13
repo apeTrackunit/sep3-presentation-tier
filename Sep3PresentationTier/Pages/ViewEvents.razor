@@ -16,6 +16,7 @@
             <MudSelect T="string" Label="Filter" ValueChanged="LoadData">
                 <MudSelectItem Value="@("Upcoming")">Upcoming</MudSelectItem>
                 <MudSelectItem Value="@("Organised by me")">Organised by me</MudSelectItem>
+                <MudSelectItem Value="@("Awaiting validation")">Awating validation</MudSelectItem>
                 <MudSelectItem Value="@("Attended by me")">Attended by me</MudSelectItem>
             </MudSelect>
         </MudForm>
@@ -46,7 +47,7 @@ else
                         </MudText>
                         <MudText Typo="Typo.body1">
                             <MudIcon Icon="@Icons.Filled.Person"Size="Size.Small"></MudIcon>
-                            @eventObj.Username
+                            @eventObj.OrganiserName
                         </MudText>
                         <MudText Typo="Typo.body1">
                             <MudIcon Icon="@Icons.Filled.Info"></MudIcon>
@@ -58,9 +59,9 @@ else
                                     <td><MudIcon Icon="@Icons.Filled.LocationOn"></MudIcon></td>
                                     <td>
                                         <ul>
-                                            <li>Latitude: @eventObj.Report.Location.Latitude</li>
-                                            <li>Longtitude: @eventObj.Report.Location.Longitude</li>
-                                            @{ string size = eventObj.Report.Location.Size == 3 ? "Large" : eventObj.Report.Location.Size == 2 ? "Medium" : "Small"; }
+                                            <li>Latitude: @eventObj.Location.Latitude</li>
+                                            <li>Longtitude: @eventObj.Location.Longitude</li>
+                                            @{ string size = eventObj.Location.Size == 3 ? "Large" : eventObj.Location.Size == 2 ? "Medium" : "Small"; }
                                             <li>Size: @size</li>
                                         </ul>
                                     </td>
@@ -80,7 +81,7 @@ else
 @code {
     private bool loading = false;
     private string msg = "";
-    private ICollection<EventDto> events = new List<EventDto>();
+    private ICollection<EventOverviewDto> events = new List<EventOverviewDto>();
     private IEnumerable<Claim> claims = new List<Claim>();
     public string? role { get; set; }
 
@@ -103,7 +104,6 @@ else
         try
         {
             events = await EventService.GetAsync(filter);
-            Console.WriteLine(events);
         }
         catch (Exception e)
         {
