@@ -6,6 +6,7 @@
 @using Services.Implementations
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject NavigationManager navManager
+@inject IDialogService DialogService
 
 <MudForm Class="page-content">
     <div class="d-flex flex-column overflow-scroll flex-wrap gap-8" style="height: calc(100vh - 200px)">
@@ -50,6 +51,47 @@
                             }
                         </SelectedTemplate>
                     </MudFileUpload>
+                    <ButtonTemplate class="d-flex align-items-end flex-row-reverse">
+                        <MudButton HtmlTag="label"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Info"
+                                   StartIcon="@Icons.Filled.PersonSearch"
+                                   OnClick="@(() => ShowParticipants())">Participants</MudButton>
+                        @if (Showing)
+                        {
+                            <MudDialog DisableSidePadding="true">
+                                <DialogContent>
+                                    <MudContainer Style="max-height: 300px; overflow-y: scroll">
+                                        @if (Loading)
+                                        {
+                                            <MudProgressCircular Indeterminate="true"></MudProgressCircular>
+                                        }
+                                        else
+                                        {
+                                            @if (CleaningEvent!.Attendees == null)
+                                            {
+                                                <MudText>There are no participants yet.</MudText>
+                                            }
+                                            else
+                                            {
+                                                <MudTable Items="@CleaningEvent.Attendees" Hover="true" Breakpoint="Breakpoint.Sm">
+                                                    <HeaderContent>
+                                                        <MudTh>Username</MudTh>
+                                                    </HeaderContent>
+                                                    <RowTemplate>
+                                                        <MudTd DataLabel="Username">@context.UserName</MudTd>
+                                                    </RowTemplate>
+                                                </MudTable>
+                                            }
+                                        }
+                                    </MudContainer>
+                                </DialogContent>
+                                <DialogActions>
+                                    <MudButton Color="Color.Dark" OnClick="Ok">Close</MudButton>
+                                </DialogActions>
+                            </MudDialog>
+                        }
+                    </ButtonTemplate>
                 }
             </MudPaper>
         </MudItem>
@@ -107,6 +149,8 @@
 </MudForm>
 
 @code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
     [Parameter]  
     public string ViewType { get; set; }
     
@@ -121,6 +165,11 @@
     
     [Parameter]
     public EventCallback<bool> ApproveEvent { get; set; }
+
+
+    public bool Showing { get; set; }
+    public bool Loading { get; set; }
+    ICollection<User> Attendees { get; set; }
 
     public DateTime? EventDate { get; set; }
     public TimeSpan? EventTime { get; set; }
@@ -171,6 +220,19 @@
         }
     }
 
-  
+
+    async Task ShowParticipants()
+    {
+        Showing = true;
+        Loading = true;
+        Attendees = CleaningEvent.Attendees.ToList();
+        var result = await DialogService.Show<MudDialog>("Participants").Result;
+        Loading = false;
+    }
+    private void Ok()
+    {
+        Showing = false;
+        MudDialog.Close(DialogResult.Ok(true));
+    }
 
 }
